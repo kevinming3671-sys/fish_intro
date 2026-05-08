@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>🐚 新手教学手册</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #c2e0f0 0%, #8ac4d8 100%);
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            color: #02457a;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* 海洋装饰 */
+        body::before {
+            content: "🐟";
+            font-size: 140px;
+            position: fixed;
+            bottom: 10px;
+            left: 0px;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 0;
+            transform: rotate(-10deg);
+        }
+        body::after {
+            content: "🐠";
+            font-size: 110px;
+            position: fixed;
+            top: 15%;
+            right: 10px;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatFish 8s infinite ease-in-out;
+        }
+
+        @keyframes floatFish {
+            0% { transform: translateY(0px) rotate(5deg);}
+            50% { transform: translateY(-25px) rotate(8deg);}
+            100% { transform: translateY(0px) rotate(5deg);}
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(3px);
+            border-radius: 48px;
+            box-shadow: 0 25px 45px rgba(0, 30, 50, 0.3);
+            overflow: hidden;
+            padding: 28px 32px 48px;
+            border: 1px solid rgba(255,255,240,0.7);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 海浪头部 */
+        .hero {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, #016b8c, #02a9c0, #027a9e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 2px 2px 12px rgba(0,50,70,0.2);
+        }
+        .hero p {
+            font-size: 1.1rem;
+            background: rgba(255,250,210,0.8);
+            display: inline-block;
+            padding: 6px 24px;
+            border-radius: 60px;
+            margin-top: 12px;
+        }
+
+        /* 卡片 */
+        .card {
+            background: rgba(255, 255, 255, 0.88);
+            border-radius: 40px;
+            margin-bottom: 32px;
+            padding: 24px 30px;
+            box-shadow: 0 10px 20px rgba(0, 40, 60, 0.1);
+            transition: 0.2s;
+            border: 1px solid rgba(110, 190, 220, 0.6);
+        }
+        .card:hover {
+            background: rgba(255,255,250,0.95);
+            transform: translateY(-2px);
+        }
+        .card h2 {
+            font-size: 1.9rem;
+            border-left: 12px solid #2b9fc2;
+            padding-left: 20px;
+            margin-bottom: 20px;
+            color: #015c7a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-sub {
+            font-size: 0.9rem;
+            color: #248faf;
+            margin-top: -8px;
+            margin-bottom: 16px;
+            padding-left: 32px;
+        }
+
+        /* 网格布局 */
+        .grid-2col {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+        .info-block {
+            background: #ecf9ff;
+            border-radius: 28px;
+            padding: 18px 22px;
+            border: 1px solid #b9def0;
+        }
+        .info-block h3 {
+            font-size: 1.5rem;
+            color: #0f6b8c;
+            margin-bottom: 12px;
+            border-bottom: 2px dashed #7fc5df;
+            display: inline-block;
+        }
+        .info-block ul, .info-block p {
+            margin-top: 10px;
+            line-height: 1.55;
+            font-size: 1rem;
+        }
+        .info-block li {
+            margin-left: 24px;
+            margin-bottom: 8px;
+        }
+        .badge {
+            background: #00a6c4;
+            color: white;
+            border-radius: 60px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .warning-badge {
+            background: #e67e22;
+        }
+
+        /* TAPTAP 宽幅图片插槽 (全宽样式) */
+        .tap-wide-gallery {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin: 20px 0 10px;
+        }
+        .tap-wide-item {
+            background: #cfe5f0;
+            border-radius: 28px;
+            padding: 16px 20px;
+            border-radius: 28px;
+            border: 1px solid #aad0e6;
+            transition: 0.2s;
+        }
+        .tap-wide-img {
+            width: 100%;
+            background: #1e6f8f;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-align: center;
+            background-image: repeating-linear-gradient(45deg, #2e88a8 0px, #2e88a8 3px, #45aacf 3px, #45aacf 12px);
+            min-height: 180px;
+            flex-direction: column;
+            box-shadow: inset 0 0 0 2px rgba(255,245,200,0.6);
+        }
+        .tap-wide-img span {
+            background: #023e5a;
+            padding: 10px 20px;
+            border-radius: 60px;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+        .tap-caption-wide {
+            margin-top: 12px;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #015c77;
+            text-align: center;
+        }
+
+        /* 二维码双图区域 */
+        .qrcode-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .qrcard {
+            flex: 1;
+            min-width: 180px;
+            background: #e7f3f9;
+            border-radius: 36px;
+            padding: 20px 16px;
+            text-align: center;
+            border: 1px solid #96c8e0;
+        }
+        .qrcard h4 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #016b8c;
+        }
+        .qr-placeholder {
+            background: #1c6d8a;
+            width: 100%;
+            max-width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: radial-gradient(circle at 25% 40%, rgba(255,255,200,0.3) 2%, transparent 2.5%);
+            background-size: 18px 18px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+        }
+        .qr-placeholder span {
+            background: #033e55;
+            padding: 8px 16px;
+            border-radius: 40px;
+            color: white;
+            font-size: 0.8rem;
+        }
+        .qr-tip {
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: #2a7f9c;
+        }
+
+@media (max-width: 760px) {
+    .container {
+        padding: 18px;
+    }
+    .grid-2col {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    /* 放大标题 */
+    .hero h1 {
+        font-size: 2.8rem;   /* 原2.2rem → 放大 */
+    }
+    .hero p {
+        font-size: 1.2rem;   /* 原约1rem → 放大 */
+    }
+    .card h2 {
+        font-size: 1.8rem;   /* 原1.5rem → 放大 */
+    }
+    .info-block h3 {
+        font-size: 1.6rem;   /* 原1.5rem → 略微放大 */
+    }
+    
+    /* 缩小正文字体 */
+    .info-block p, 
+    .info-block ul, 
+    .info-block li {
+        font-size: 0.85rem;  /* 原1rem → 缩小 */
+        line-height: 1.45;
+    }
+    .section-sub {
+        font-size: 0.8rem;   /* 原0.9rem → 缩小 */
+    }
+    .tap-caption-wide {
+        font-size: 0.85rem;  /* 原1rem → 缩小 */
+    }
+    .qr-tip {
+        font-size: 0.75rem;  /* 原0.85rem → 缩小 */
+    }
+    .badge {
+        font-size: 0.7rem;   /* 原0.75rem → 略微缩小 */
+    }
+    .tap-wide-img span, 
+    .qr-placeholder span {
+        font-size: 0.9rem;   /* 占位文字缩小 */
+    }
+    footer {
+        font-size: 0.7rem;   /* 原0.8rem → 缩小 */
+    }
+}
+
+        hr {
+            margin: 20px 0;
+            border: 1px solid #b4daef;
+        }
+        footer {
+            text-align: center;
+            margin-top: 32px;
+            font-size: 0.8rem;
+            color: #2d6f8f;
+            border-top: 1px solid #8ac7e2;
+            padding-top: 28px;
+        }
+        .price-table {
+            background: #dff1f9;
+            border-radius: 28px;
+            overflow: hidden;
+            width: 100%;
+            margin: 12px 0;
+        }
+        .price-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #b1d4e8;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hero">
+        <h1>🐚 Let's Fish! 🌊<br>泡泡鱼3手游·新手指南</h1>
+        <p>🐟 合成 | 祭祀 | 进化 | 养成 🧜</p>
+    </div>
+
+    <!-- 第一部分：基本名词介绍（完全照抄第一版原文，一字不改） -->
+    <div class="card">
+        <h2>📖 一、基本名词介绍</h2>
+        <div class="grid-2col">
+            <div class="info-block"><h3>🐚 bk</h3><p>贝壳的简称，基础流通货币。<br>✔ 通过养鱼、卖鱼、开混钓获得，是日常交易核心资源。<br>官方<strong>不提供</strong>充值途径，玩家间交易比例约<strong>1r = 35w bk。</strong></p></div>
+            <div class="info-block"><h3>✨ zz</h3><p>珍珠的简称，可以用于购买珍珠鱼以及稀有道具。<br>✔ 充值比例 <strong>30r = 300zz</strong> ，<strong>95r = 1000zz</strong> ，<strong>900r = 10000zz</strong> ，也可通过VIP每日签到和更新补偿等途径获得。</p></div>
+            <div class="info-block"><h3>🐟 肉鱼</h3><p>关卡常驻鱼种，主要用于养大卖贝壳/点精华合成/玩家间交易。</p></div>
+            <div class="info-block"><h3>⚗️ 合成</h3><p>消耗 bk/精华/zz 和时间合成指定鱼，精华不够时可以使用珍珠补足。合成鱼对游戏等级和合成等级有要求，成功率各有不同。</p></div>
+            <div class="info-block"><h3>🎏 活动鱼</h3><p>定期更新，通常活动期为半个月。下架后暂不洄游，可与其他玩家交换或购买。</p></div>
+            <div class="info-block"><h3>📋 常驻鱼</h3><p>包括关卡鱼与星座鱼、节气鱼等，会洄游。</p></div>
+        </div>
+    </div>
+
+    <!-- 游戏界面宽幅TapTap图片插槽（全宽） -->
+    <div class="card">
+        <h2>🎮 二、游戏界面介绍</h2>
+        <div class="tap-wide-gallery">
+    <div class="tap-wide-item"><div class="tap-wide-img"><img src="p1.png" alt="登录界面" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">登录界面</div></div>
+    <div class="tap-wide-item"><div class="tap-wide-img"><img src="p2.png" alt="游戏关卡界面" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">游戏关卡界面</div></div>
+    <div class="tap-wide-item"><div class="tap-wide-img"><img src="p3.png" alt="关卡详情" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">关卡详情</div></div>
+    <div class="tap-wide-item"><div class="tap-wide-img"><img src="p11.png" alt="抓鱼界面" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">抓鱼界面</div></div>
+    <div class="tap-wide-item"><div class="tap-wide-img"><img src="p12.png" alt="抓鱼详情" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">抓鱼详情</div></div>
+    <div class="tap-wide-item"><div class="tap-wide-img"><img src="p4.png" alt="鱼缸界面" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">鱼缸界面</div></div>
+    <div class="tap-wide-item"><div class="tap-wide-img"><img src="p5.png" alt="个人信息" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">个人信息</div></div>
+    <div class="tap-wide-item"><div class="tap-wide-img"><img src="p6.png" alt="图鉴界面" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">图鉴界面</div></div>
+    <div class="tap-wide-item"><div class="tap-wide-img"><img src="p7.png" alt="图鉴明细" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">图鉴明细</div></div>
+    <div class="tap-wide-item"><div class="tap-wide-img"><img src="p8.png" alt="商店界面" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">商店界面</div></div>
+    <div class="tap-wide-item"><div class="tap-wide-img"><img src="p9.png" alt="合成界面" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">合成界面</div></div>
+    <div class="tap-wide-item"><div class="tap-wide-img"><img src="p10.png" alt="好友界面" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">好友界面</div></div>
+</div>
+        <p class="section-sub">※ 所有图片更新截止2026年5月。</p>
+    </div>
+
+    <!-- 体力抓鱼&扫荡 -->
+    <div class="card">
+        <h2>⚡ 三、体力及抓鱼&扫荡介绍</h2>
+        <div class="grid-2col">
+            <div class="info-block"><h3>⏱️ 体力机制</h3><p>非VIP每1小时恢复1体力，上限24，扫荡次数15次/日；VIP每0.5小时恢复1体力，上限48，扫荡次数40次/日；商店卖体力，10zz=1点体力。</p></div>
+            <div class="info-block"><h3>🧹 扫荡解锁等级</h3><p>5级开放第一大关扫荡，11级开放第二大关扫荡，16级开放第三大关扫荡，21级开放第四大关扫荡。扫荡跳过抓鱼过程，直接获得收藏鱼。</p></div>
+            <div class="info-block"><h3>🌊 三大关卡机制</h3><p>第一大关无障碍物；第二大关有冰锥下落，会扎破气泡；第三大关有左右洋流，吹歪气泡；第四大关有火线，气泡需要过火线才能抓鱼。<br>各关卡出鱼分数：A关4000分，B关9000分，C关15000分，D关1/2/3/4w分（计分无上限）。ABC三关收藏鱼会来回游，D关收藏鱼<strong>只游一次</strong>。</p></div>
+            <div class="info-block"><h3>🕹️ 特殊道具&技巧</h3><p>蓝色时钟+10s，黑色时钟-10s，汤圆补充气泡能量，乌巴扎破气泡。每一大关都有高分鱼，优先抓高分鱼更容易过关。</p></div>
+        </div>
+    </div>
+
+    <!-- 四、养鱼喂鱼卖鱼图鉴相关 -->
+    <div class="card">
+        <h2>🐠 四、养鱼喂鱼卖鱼图鉴相关</h2>
+        <div class="grid-2col">
+            <div class="info-block"><h3>🏺 鱼缸星级规则</h3><p>有星级的鱼缸数量<=游戏等级，0星级的鱼缸数量<=游戏等级，两种鱼缸分开计数。目前砸缸只有100bk，谨慎砸缸。<br>0星鱼缸：不能喂鱼，可以开混钓和展示；1星鱼缸：只能养1星鱼；2星鱼缸：养2星及以下的鱼；3星鱼缸：养3星及以下的鱼；4星鱼缸：养4星及以下的鱼。<br>不小心喂到的鱼，可放入0星级鱼缸清空饱食度，活动鱼有经验就不值钱了。</p></div>
+            <div class="info-block"><h3>📈 成长 & 满级</h3><p>喂一次鱼可保持鱼24小时不饿，从上一次喂鱼开始计算，每次喂鱼均更新计时。鱼1秒成长1点，一小时3600点，一天86400点，可估算满级时间。<br>目前未开放祭祀和进化，满级鱼暂时只能卖贝壳，或留着等待祭祀功能上线。<br>通过所有途径获取到的1级0经验鱼，可以打开1级图鉴；把1级鱼养到满级可获得该鱼所有等级图鉴。从别的途径获取到的2级鱼无法打开2级图鉴，但可以通过养这只鱼开启3~5级图鉴并获得这部分的经验。</p></div>
+        </div>
+        <div style="background:#dcf3fc; border-radius: 28px; padding: 14px 20px; margin-top: 12px;"><strong>✨ 经验图鉴如下：</strong>图鉴等级逐步解锁全收集奖励。</div>
+        <div class="tap-wide-gallery" style="margin-top: 16px;">
+            <div class="tap-wide-item"><div class="tap-wide-img"><img src="jy.png" alt="经验介绍" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">星级经验图谱</div></div>
+        </div>
+    </div>
+
+    <!-- 五、星座鱼·节气鱼全新内容（原第五块保留） -->
+    <div class="card">
+        <h2>🌟 五、星座鱼 · 节气鱼</h2>
+        <div class="info-block" style="margin-bottom: 20px;">
+            <h3>♓ 每月一条星座鱼</h3>
+            <p>星座鱼每年一轮，每月一条星座鱼。</p>
+        </div>
+        <div class="info-block" style="background: #e2f2f0;">
+            <h3>🎋 节气鱼正式上线 </h3>
+            <p>🌿 节气鱼每半个月一条，作为超低概率鱼，只在第三大关以后出现，并且起始概率为10万之1，第四大关概率x4倍，每24条鱼轮回结束，再次出现时概率会逐年降低，收藏价值极高。</p>
+        </div>
+        <!-- 宽幅图片插槽展示星座/节气预览 -->
+        <div class="tap-wide-gallery" style="margin-top: 20px;">
+            <div class="tap-wide-item"><div class="tap-wide-img"><img src="xzy.jpg" alt="星座鱼" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">十二星座鱼图鉴</div></div>
+        </div>
+    </div>
+
+    <!-- 鱼种类信息 & 种族 -->
+    <div class="card">
+        <h2>🐡 六、种族信息</h2>
+        <div class="grid-2col">
+            <div class="info-block"><h3>🔱 六大种族</h3><p>迅风(XF)    团团(TT)    巨角(JJ)    豆花(DH)    暴米(BM)    三刀(SD)</p><p>关卡鱼及部分活动鱼名称</p></div>
+            <div class="info-block"><h3>📖 全图鉴目标</h3><p>收集所有种族满星鱼，点亮收藏册。<br>节气&星座鱼加入让图鉴更为宏大。活动鱼丰富。</p></div>
+        </div>
+        <!-- 宽幅TapTap鱼类插槽 -->
+        <div class="tap-wide-gallery">
+            <div class="tap-wide-item"><div class="tap-wide-img"><img src="czy.jpg" alt="常驻鱼图鉴" style="width:100%; height:auto; display:block; border-radius:24px;"></div><div class="tap-caption-wide">常驻鱼图鉴</div></div>
+        </div>
+    </div>
+    <!-- ===========  账号交易官方代理人 ========== -->
+    <div class="card">
+        <h2>🔐 七、账号交易官方代理人 & 更换邮箱服务</h2>
+        <div class="info-block">
+            <h3>📢 关于设立账号交易官方代理人的通知</h3>
+            <p>随着玩家之间交易账号的增多，账号交易的风险问题也变得突出，多数情况下绑定邮箱的账号不会把绑定邮箱一起出售，所以邮箱主人是可以用邮箱取回密码的，这样交易风险很大。经过讨论和考虑，现推出交易账号更换邮箱的服务。这项服务是收费的，因为账号里的一切数据都是依附于邮箱，其它数据都可以单独更改和替换，但邮箱不能，如果要更换邮箱，唯一的办法就是新建立一个新邮箱账号，然后把旧账号中的数据全部复制到新邮箱账号中，这是一个很耗费时间（程序员时间）和资源（服务器流量）的事情。目前收费是根据账号收藏鱼数量制定的标准：</p>
+            <table class="price-table" style="width:100%; background:#eef5fa;">
+                <tr><td>1000条鱼以内</td><td>￥120</td></tr>
+                <tr><td>1000~5000条鱼</td><td>￥150</td></tr>
+                <tr><td>5000~10000条鱼</td><td>￥180</td></tr>
+                <tr><td>10000~15000条鱼</td><td>￥220</td></tr>
+                <tr><td>15000~20000条鱼</td><td>￥300</td></tr>
+                <tr><td>20000条鱼以上</td><td>无法进行转移更换邮箱</td></tr>
+            </table>
+            <p>双方交易需要第三方中间人认定，官方暂定由皮皮阳（微信号Li2020519ch）担任账号交易代理人，主要负责卖家出号登记、与买家收购账号咨询、协助买卖双方进行交易、保证交易安全性和协助换绑。目前交易规则如下：<br>
+            1. 有充值的账号：需提供充值记录，即在哪个代理人购买充值码为该号充值；<br>
+            2. 无充值的账号：需提供邮箱归属自己的证据；若邮箱为购买所得，需提供邮箱购买记录；<br>
+            3. 不接收存在交易风险的账号，风险账号示例：无邮箱账号等等。<br>
+            5. 只能对一个账号转移到另一账号进行转移，不支持账号合并。<br>
+            以上信息由账号交易代理人核实录确认无误后，开始交易。</p>
+        </div>
+    </div>
+
+    <!-- 最后一页：两个图片位置 公众号二维码 + 抖音二维码 -->
+    <div class="card">
+        <h2>📱 官方社区 & 互动平台</h2>
+        <div class="qrcode-row">
+            <div class="qrcard">
+                <h4>🐳 官方公众号</h4>
+                <div class="qr-placeholder">
+                    <img src="gzh.png" alt="VIP特权界面" style="width:100%; height:auto; display:block; border-radius:24px;">
+                </div>
+                <p class="qr-tip">扫码关注，获取最新活动鱼资讯</p>
+            </div>
+            <div class="qrcard">
+                <h4>🎵 抖音官方号</h4>
+                <div class="qr-placeholder">
+                    <img src="dy.jpg" alt="VIP特权界面" style="width:100%; height:auto; display:block; border-radius:24px;">
+                </div>
+                <p class="qr-tip">养鱼日常 / 钓鱼攻略 / 扫鱼录屏</p>
+            </div>
+        </div>
+        <p class="section-sub" style="text-align:center;">※新加入的玩家可以加郑光进群，微信号light_zg。</p>
+    </div>
+
+    <footer>
+        🐙 泡泡鱼3手游 · 新手手册 | 数据更新至2026年5月 <br>
+        特别鸣谢：制图、攻略及全体玩家 🧜‍
+    </footer>
+</div>
+</body>
+</html>
