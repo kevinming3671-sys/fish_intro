@@ -348,12 +348,16 @@
             });
         }
         
+        // 修复后的 safeFileName 函数（纯英文数字 + 时间戳 + 随机哈希）
         function safeFileName(originalName, fishTitle) {
+            // 获取文件扩展名（小写）
             const ext = originalName.split('.').pop().toLowerCase();
+            // 时间戳毫秒
             const timestamp = Date.now();
-            const random = Math.floor(Math.random() * 10000);
-            const cleanTitle = fishTitle.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_').substring(0, 30);
-            return `${timestamp}_${random}_${cleanTitle}.${ext}`;
+            // 随机8位哈希（字母数字混合）
+            const randomHash = Math.random().toString(36).substring(2, 10);
+            // 纯英文/数字文件名，完全不依赖中文鱼名
+            return `fish_${timestamp}_${randomHash}.${ext}`;
         }
         
         async function fetchFishStats(fishId) {
