@@ -5,20 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>泡泡鱼图鉴 | 社区养鱼评分站</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: linear-gradient(145deg, #c2e0f0 0%, #8ac4d8 100%);
-            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             padding: 1.5rem;
             min-height: 100vh;
             color: #02457a;
         }
-
         .app-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -27,9 +21,7 @@
             border-radius: 2.5rem;
             box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
             padding: 1.8rem 2rem 2rem;
-            transition: all 0.2s;
         }
-
         .nav-header {
             display: flex;
             justify-content: space-between;
@@ -39,35 +31,11 @@
             padding-bottom: 1rem;
             border-bottom: 2px dashed #7fc5df;
         }
-        .logo h1 {
-            font-size: 1.8rem;
-            background: linear-gradient(135deg, #016b8c, #02a9c0);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-        }
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-        .nav-btn {
-            background: #2b9fc2;
-            border: none;
-            padding: 0.5rem 1.2rem;
-            border-radius: 2rem;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .nav-btn.active {
-            background: #f59e0b;
-            box-shadow: 0 0 0 2px #fff3e0;
-        }
-        .add-fish-btn {
-            background: #2c6e3c;
-        }
-
+        .logo h1 { font-size: 1.8rem; background: linear-gradient(135deg, #016b8c, #02a9c0); background-clip: text; -webkit-background-clip: text; color: transparent; }
+        .nav-buttons { display: flex; gap: 1rem; }
+        .nav-btn { background: #2b9fc2; border: none; padding: 0.5rem 1.2rem; border-radius: 2rem; color: white; font-weight: bold; cursor: pointer; }
+        .nav-btn.active { background: #f59e0b; }
+        .add-fish-btn { background: #2c6e3c; }
         .toolbar {
             display: flex;
             flex-wrap: wrap;
@@ -78,31 +46,10 @@
             padding: 0.8rem 1.2rem;
             border-radius: 2rem;
         }
-        .search-box input {
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-            border: 1px solid #cde5f0;
-            width: 220px;
-        }
-        .sort-box {
-            display: flex;
-            gap: 0.8rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .sort-btn {
-            background: #e7f2f7;
-            border: none;
-            padding: 0.4rem 1rem;
-            border-radius: 2rem;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .sort-btn.active {
-            background: #f59e0b;
-            color: white;
-        }
-
+        .search-box input { padding: 0.5rem 1rem; border-radius: 2rem; border: 1px solid #cde5f0; width: 220px; }
+        .sort-box { display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
+        .sort-btn { background: #e7f2f7; border: none; padding: 0.4rem 1rem; border-radius: 2rem; cursor: pointer; font-weight: 500; }
+        .sort-btn.active { background: #f59e0b; color: white; }
         .fish-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -118,29 +65,11 @@
             cursor: pointer;
             position: relative;
         }
-        .fish-card:hover {
-            transform: translateY(-6px);
-        }
-        .fish-card-img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            background: #d9eef5;
-        }
-        .fish-card-info {
-            padding: 1rem;
-        }
-        .fish-card-title {
-            font-weight: 800;
-            font-size: 1.2rem;
-        }
-        .fish-card-stats {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 8px;
-            font-size: 0.8rem;
-            color: #2c6f8c;
-        }
+        .fish-card:hover { transform: translateY(-6px); }
+        .fish-card-img { width: 100%; height: 180px; object-fit: cover; background: #d9eef5; }
+        .fish-card-info { padding: 1rem; }
+        .fish-card-title { font-weight: 800; font-size: 1.2rem; }
+        .fish-card-stats { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.8rem; color: #2c6f8c; }
         .delete-fish-btn {
             position: absolute;
             top: 8px;
@@ -153,12 +82,8 @@
             height: 32px;
             font-size: 1.2rem;
             cursor: pointer;
-            backdrop-filter: blur(4px);
         }
-        .delete-fish-btn:hover {
-            background: #e2583e;
-        }
-
+        .delete-fish-btn:hover { background: #e2583e; }
         .add-fish-form {
             background: #fefce8;
             border-radius: 1.8rem;
@@ -170,25 +95,9 @@
             align-items: flex-end;
             border: 1px solid #ffe3a3;
         }
-        .add-fish-form input {
-            flex: 2;
-            padding: 0.7rem;
-            border-radius: 2rem;
-            border: 1px solid #ffe0a3;
-        }
-        .add-fish-form button {
-            background: #2b9fc2;
-            padding: 0.6rem 1.5rem;
-            border-radius: 2rem;
-        }
-
-        .detail-section {
-            animation: fadeIn 0.2s;
-        }
-        .back-btn {
-            background: #365f77;
-            margin-bottom: 1rem;
-        }
+        .add-fish-form input { flex: 2; padding: 0.7rem; border-radius: 2rem; border: 1px solid #ffe0a3; }
+        .add-fish-form button { background: #2b9fc2; padding: 0.6rem 1.5rem; border-radius: 2rem; }
+        .back-btn { background: #365f77; margin-bottom: 1rem; }
         .fish-detail-header {
             display: flex;
             flex-wrap: wrap;
@@ -198,38 +107,12 @@
             border-radius: 2rem;
             margin-bottom: 1.5rem;
         }
-        .detail-img {
-            width: 280px;
-            object-fit: cover;
-            border-radius: 1.5rem;
-            background: #e6f4f9;
-        }
-        .detail-meta {
-            flex: 1;
-        }
-        .rating-stars {
-            display: flex;
-            gap: 0.5rem;
-            margin: 0.6rem 0;
-        }
-        .star {
-            font-size: 2rem;
-            cursor: pointer;
-            background: none;
-            border: none;
-            color: #cbd5e1;
-        }
-        .star.active {
-            color: #f5b042;
-        }
-        .score-text-badge {
-            background: #243b44;
-            display: inline-block;
-            padding: 0.2rem 0.8rem;
-            border-radius: 30px;
-            color: white;
-            font-size: 0.75rem;
-        }
+        .detail-img { width: 280px; object-fit: cover; border-radius: 1.5rem; }
+        .detail-meta { flex: 1; }
+        .rating-stars { display: flex; gap: 0.5rem; margin: 0.6rem 0; }
+        .star { font-size: 2rem; cursor: pointer; background: none; border: none; color: #cbd5e1; }
+        .star.active { color: #f5b042; }
+        .score-text-badge { background: #243b44; display: inline-block; padding: 0.2rem 0.8rem; border-radius: 30px; color: white; font-size: 0.75rem; }
         .comment-item {
             background: white;
             border-radius: 1.2rem;
@@ -249,28 +132,10 @@
             cursor: pointer;
             font-size: 0.7rem;
         }
-        button {
-            transition: 0.1s;
-            cursor: pointer;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px);}
-            to { opacity: 1; transform: translateY(0);}
-        }
-        footer {
-            text-align: center;
-            margin-top: 1.5rem;
-            font-size: 0.7rem;
-        }
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: #2c6f92;
-        }
-        @media (max-width: 680px) {
-            .app-container { padding: 1rem; }
-            .toolbar { flex-direction: column; }
-        }
+        button { transition: 0.1s; cursor: pointer; }
+        footer { text-align: center; margin-top: 1.5rem; font-size: 0.7rem; }
+        .loading { text-align: center; padding: 2rem; color: #2c6f92; }
+        @media (max-width: 680px) { .app-container { padding: 1rem; } .toolbar { flex-direction: column; } }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -287,18 +152,19 @@
     <div id="homeView">
         <div class="toolbar">
             <div class="search-box">
+                <label for="searchInput" style="display:none;">搜索</label>
                 <input type="text" id="searchInput" placeholder="🔍 搜鱼名 / 标题...">
             </div>
             <div class="sort-box">
                 <span>排序：</span>
-                <button class="sort-btn" data-sort="hot">🔥 热度(评分人数)</button>
+                <button class="sort-btn" data-sort="hot">🔥 热度</button>
                 <button class="sort-btn" data-sort="score">⭐ 平均分</button>
-                <button class="sort-btn" data-sort="time">🕒 最新入库</button>
+                <button class="sort-btn" data-sort="time">🕒 最新</button>
             </div>
         </div>
         <div id="inlineAddForm" style="display: none;" class="add-fish-form">
             <input type="text" id="newFishTitle" placeholder="鱼种名称 (例如 梦幻荧光鱼)" maxlength="40">
-            <input type="file" id="newFishImage" accept="image/*">
+            <input type="file" id="newFishImage" accept="image/jpeg,image/png,image/webp">
             <button id="confirmAddFishBtn">✨ 确认上传并入库</button>
             <button id="cancelAddBtn" style="background:#aaa;">取消</button>
         </div>
@@ -314,13 +180,11 @@
 
 <script>
     (function() {
-        // ================== SUPABASE 凭证 =====================
         const SUPABASE_URL = "https://lciccmgqjvmzvvpytshp.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_BabKCuxCHtQMflQNefq_vw_dWxNuIz3";
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const STORAGE_BUCKET = "fish-images";
         
-        // 评分文字映射 1~5
         const scoreTextMap = { 1: "拉完了", 2: "NPC", 3: "人上人", 4: "顶级", 5: "夯" };
         
         let allFishes = [];
@@ -329,13 +193,21 @@
         let currentView = "home";
         let currentFishId = null;
         
-        // 安全的文件名生成（移除特殊字符，只保留字母数字和点）
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
         function safeFileName(originalName, fishTitle) {
             const ext = originalName.split('.').pop().toLowerCase();
             const timestamp = Date.now();
             const random = Math.floor(Math.random() * 10000);
-            // 只保留字母数字，移除中文和特殊符号
-            const cleanTitle = fishTitle.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
+            const cleanTitle = fishTitle.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_').substring(0, 30);
             return `${timestamp}_${random}_${cleanTitle}.${ext}`;
         }
         
@@ -413,9 +285,9 @@
                     e.stopPropagation();
                     const fishId = parseInt(btn.getAttribute('data-id'));
                     const title = btn.getAttribute('data-title');
-                    const confirmDel = confirm(`⚠️ 永久删除鱼种“${title}”及其全部评论？\n删除后不可恢复！`);
-                    if (confirmDel) {
-                        await deleteFishAndComments(fishId);
+                    if (confirm(`⚠️ 永久删除鱼种“${title}”及其全部评论？`)) {
+                        await supabase.from('comments').delete().eq('fish_id', fishId);
+                        await supabase.from('fishes').delete().eq('id', fishId);
                         await loadAllFishes();
                         await renderHome();
                         if (currentView === 'detail' && currentFishId === fishId) {
@@ -428,197 +300,131 @@
             });
         }
         
-        async function deleteFishAndComments(fishId) {
-            const { error: commentError } = await supabase
-                .from('comments')
-                .delete()
-                .eq('fish_id', fishId);
-            if (commentError) console.warn("删除评论失败", commentError);
-            const { error: fishError } = await supabase
-                .from('fishes')
-                .delete()
-                .eq('id', fishId);
-            if (fishError) alert("删除鱼失败: " + fishError.message);
-            else alert("🗑️ 鱼种已删除");
-        }
-        
         async function showDetailView(fishId) {
             currentFishId = fishId;
             const fish = allFishes.find(f => f.id === fishId);
-            if (!fish) return;
+            if (!fish) { alert("找不到该鱼"); return; }
             
-            const { data: commentsData, error } = await supabase
+            const { data: comments, error } = await supabase
                 .from('comments')
                 .select('*')
                 .eq('fish_id', fishId)
                 .order('created_at', { ascending: false });
             if (error) console.error(error);
-            const comments = commentsData || [];
+            const commentsList = comments || [];
             
             let avgScore = 0;
-            if (comments.length) {
-                const totalScore = comments.reduce((a,b) => a + b.score, 0);
-                avgScore = (totalScore / comments.length).toFixed(1);
+            if (commentsList.length) {
+                const totalScore = commentsList.reduce((a,b) => a + b.score, 0);
+                avgScore = (totalScore / commentsList.length).toFixed(1);
             }
-            const scoreText = avgScore ? `${avgScore} 星` : '暂无评分';
+            
+            let commentsHtml = '';
+            for (let c of commentsList) {
+                const starShow = "★".repeat(c.score) + "☆".repeat(5 - c.score);
+                const time = new Date(c.created_at).toLocaleString();
+                commentsHtml += `
+                    <div class="comment-item">
+                        <div><strong>🐟 ${escapeHtml(c.nick || '养鱼客')}</strong> ⭐ ${c.score}/5 ${starShow} <span style="font-size:0.7rem;">${time}</span></div>
+                        <div style="margin-top:5px;">${escapeHtml(c.content)}</div>
+                        <button class="delete-comment-btn" data-cid="${c.id}">🗑️ 删除</button>
+                    </div>
+                `;
+            }
+            if (commentsList.length === 0) commentsHtml = '<div class="loading">🐟 暂无评论，来做第一个渔友～</div>';
             
             const html = `
                 <div class="fish-detail-header">
                     <img class="detail-img" src="${fish.image_url}" onerror="this.src='https://picsum.photos/id/129/300/300'">
                     <div class="detail-meta">
                         <h2>🐟 ${escapeHtml(fish.title)}</h2>
-                        <div>⭐ 综合评分: ${scoreText} (${comments.length}人评价)</div>
+                        <div>⭐ 综合评分: ${avgScore || '暂无'} (${commentsList.length}人评价)</div>
                         <div class="rating-stars" id="detailStars"></div>
-                        <div id="selectedRatingText" style="margin:5px 0; font-weight:bold;"></div>
+                        <div id="selectedRatingText" style="margin:5px 0;"></div>
                         <div class="score-text-badge" id="scoreLevelLabel">待评分</div>
                     </div>
                 </div>
-                <div class="form-comment" style="background:#f5fafd; padding:1rem; border-radius:1.5rem; margin-bottom:1rem;">
-                    <div><label>🎭 渔友昵称 (可选)</label> <input type="text" id="detailNickname" placeholder="养鱼客" maxlength="30"></div>
-                    <div style="margin-top:8px;"><label>💬 评价心得</label> <textarea id="detailCommentText" rows="2" style="width:100%; border-radius:1rem;"></textarea></div>
+                <div style="background:#f5fafd; padding:1rem; border-radius:1.5rem; margin-bottom:1rem;">
+                    <label for="detailNickname">🎭 渔友昵称 (可选)</label>
+                    <input type="text" id="detailNickname" placeholder="养鱼客" maxlength="30" style="width:100%; margin:5px 0; padding:8px; border-radius:1.5rem; border:1px solid #ccc;">
+                    <label for="detailCommentText">💬 评价心得</label>
+                    <textarea id="detailCommentText" rows="2" style="width:100%; border-radius:1rem; padding:8px;"></textarea>
                     <button id="submitDetailComment" style="margin-top:8px;">📤 发表评分+评论</button>
                 </div>
                 <h4>📋 最新渔友评价</h4>
-                <div id="detailCommentsList">
-                    ${renderCommentListHtml(comments)}
-                </div>
+                <div id="detailCommentsList">${commentsHtml}</div>
             `;
             document.getElementById('detailContent').innerHTML = html;
             
             let selectedStar = null;
-            function renderStarsDetail(selected) {
-                const starContainer = document.getElementById('detailStars');
-                if (!starContainer) return;
+            const starContainer = document.getElementById('detailStars');
+            function renderStars(selected) {
                 starContainer.innerHTML = '';
                 for (let i = 1; i <= 5; i++) {
-                    const starBtn = document.createElement('button');
-                    starBtn.className = 'star';
-                    starBtn.innerHTML = (selected !== null && i <= selected) ? '★' : '☆';
-                    if (selected !== null && i <= selected) starBtn.classList.add('active');
-                    starBtn.onclick = () => {
+                    const star = document.createElement('button');
+                    star.className = 'star';
+                    star.innerHTML = (selected !== null && i <= selected) ? '★' : '☆';
+                    if (selected !== null && i <= selected) star.classList.add('active');
+                    star.onclick = () => {
                         selectedStar = i;
-                        const textSpan = document.getElementById('selectedRatingText');
-                        textSpan.innerHTML = `🎣 已选: ${i}星 (${scoreTextMap[i]})`;
-                        const levelSpan = document.getElementById('scoreLevelLabel');
-                        levelSpan.innerHTML = `定档: ${scoreTextMap[i]}`;
-                        renderStarsDetail(i);
+                        document.getElementById('selectedRatingText').innerHTML = `🎣 已选: ${i}星 (${scoreTextMap[i]})`;
+                        document.getElementById('scoreLevelLabel').innerHTML = `定档: ${scoreTextMap[i]}`;
+                        renderStars(i);
                     };
-                    starContainer.appendChild(starBtn);
+                    starContainer.appendChild(star);
                 }
             }
-            renderStarsDetail(null);
+            renderStars(null);
             
-            const submitBtn = document.getElementById('submitDetailComment');
-            submitBtn.onclick = async () => {
-                if (selectedStar === null) { alert("请先点击星星打分 (1~5⭐)"); return; }
+            document.getElementById('submitDetailComment').onclick = async () => {
+                if (selectedStar === null) { alert("请先点击星星打分"); return; }
                 let content = document.getElementById('detailCommentText').value.trim();
-                if (!content) { alert("请留下你对这条鱼的看法~"); return; }
+                if (!content) { alert("请填写评价"); return; }
                 let nick = document.getElementById('detailNickname').value.trim();
                 if (!nick) nick = "养鱼客";
-                const { error: insertErr } = await supabase
-                    .from('comments')
-                    .insert([{
-                        fish_id: fishId,
-                        nick: nick,
-                        score: selectedStar,
-                        content: content
-                    }]);
-                if (insertErr) { alert("评论失败:"+insertErr.message); return; }
+                const { error } = await supabase.from('comments').insert([{
+                    fish_id: fishId, nick: nick, score: selectedStar, content: content
+                }]);
+                if (error) { alert("评论失败:" + error.message); return; }
                 document.getElementById('detailCommentText').value = '';
                 document.getElementById('detailNickname').value = '';
-                selectedStar = null;
-                renderStarsDetail(null);
-                document.getElementById('selectedRatingText').innerHTML = '';
-                document.getElementById('scoreLevelLabel').innerHTML = '待评分';
-                await refreshDetailAfterComment(fishId);
+                await showDetailView(fishId);
             };
             
-            const commentsDiv = document.getElementById('detailCommentsList');
-            if (commentsDiv) {
-                commentsDiv.querySelectorAll('.delete-comment-btn').forEach(btn => {
-                    btn.onclick = async (e) => {
-                        e.stopPropagation();
-                        const commentId = parseInt(btn.getAttribute('data-cid'));
-                        if (confirm("🗑️ 确定删除这条评论吗？删除后不可恢复。")) {
-                            const { error: delErr } = await supabase
-                                .from('comments')
-                                .delete()
-                                .eq('id', commentId);
-                            if (!delErr) {
-                                await refreshDetailAfterComment(fishId);
-                            } else { alert("删除失败"); }
-                        }
-                    };
-                });
-            }
-        }
-        
-        async function refreshDetailAfterComment(fishId) {
-            if (currentFishId === fishId) {
-                await showDetailView(fishId);
-            }
-        }
-        
-        function renderCommentListHtml(comments) {
-            if (!comments.length) return '<div class="loading">🐟 暂无评论，来做第一个渔友～</div>';
-            let html = '';
-            for (let c of comments) {
-                const starShow = "★".repeat(c.score) + "☆".repeat(5 - c.score);
-                const time = new Date(c.created_at).toLocaleString();
-                html += `
-                    <div class="comment-item">
-                        <div><strong>🐟 ${escapeHtml(c.nick || '养鱼客')}</strong>  ⭐ ${c.score}/5 ${starShow}  <span style="font-size:0.7rem;">${time}</span></div>
-                        <div style="margin-top:5px;">${escapeHtml(c.content)}</div>
-                        <button class="delete-comment-btn" data-cid="${c.id}">🗑️ 删除</button>
-                    </div>
-                `;
-            }
-            return html;
+            document.querySelectorAll('.delete-comment-btn').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const commentId = parseInt(btn.getAttribute('data-cid'));
+                    if (confirm("删除这条评论？")) {
+                        await supabase.from('comments').delete().eq('id', commentId);
+                        await showDetailView(fishId);
+                    }
+                };
+            });
         }
         
         async function uploadFishImage(file, fishTitle) {
             if (!file) throw new Error("未选择图片");
-            
-            // 限制文件大小 5MB
-            if (file.size > 5 * 1024 * 1024) {
-                throw new Error("图片不能超过 5MB");
-            }
-            
+            if (file.size > 5 * 1024 * 1024) throw new Error("图片不能超过 5MB");
             const fileName = safeFileName(file.name, fishTitle);
-            console.log("上传文件名:", fileName);
-            
-            const { data, error } = await supabase.storage
-                .from(STORAGE_BUCKET)
-                .upload(fileName, file, {
-                    cacheControl: '3600',
-                    upsert: false,
-                    contentType: file.type
-                });
-            
-            if (error) {
-                console.error("上传错误详情:", error);
-                throw new Error(`上传失败: ${error.message}`);
-            }
-            
+            const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(fileName, file, {
+                cacheControl: '3600', upsert: false, contentType: file.type
+            });
+            if (error) throw new Error(`上传失败: ${error.message}`);
             const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
             return urlData.publicUrl;
         }
         
         async function addNewFish(title, imageFile) {
-            if (!title || title.trim() === "") throw new Error("鱼名不能为空");
-            let imageUrl = await uploadFishImage(imageFile, title);
-            const { error } = await supabase
-                .from('fishes')
-                .insert([{ title: title.trim(), image_url: imageUrl }]);
+            if (!title.trim()) throw new Error("鱼名不能为空");
+            const imageUrl = await uploadFishImage(imageFile, title);
+            const { error } = await supabase.from('fishes').insert([{ title: title.trim(), image_url: imageUrl }]);
             if (error) throw error;
             return true;
         }
         
         async function loadAllFishes() {
-            const { data, error } = await supabase
-                .from('fishes')
-                .select('*')
-                .order('created_at', { ascending: false });
+            const { data, error } = await supabase.from('fishes').select('*').order('created_at', { ascending: false });
             if (error) { console.error(error); allFishes = []; }
             else { allFishes = data || []; }
         }
@@ -630,63 +436,48 @@
             renderHome();
         }
         
-        // 事件绑定
-        document.getElementById('goHomeBtn').onclick = () => { showHome(); };
-        document.getElementById('backHomeBtn').onclick = () => { showHome(); };
+        document.getElementById('goHomeBtn').onclick = showHome;
+        document.getElementById('backHomeBtn').onclick = showHome;
         
         const addFormDiv = document.getElementById('inlineAddForm');
         document.getElementById('showAddFormBtn').onclick = () => {
-            if (addFormDiv.style.display === 'none' || addFormDiv.style.display === '') {
-                addFormDiv.style.display = 'flex';
-            } else {
-                addFormDiv.style.display = 'none';
-            }
+            addFormDiv.style.display = addFormDiv.style.display === 'none' ? 'flex' : 'none';
         };
         document.getElementById('cancelAddBtn').onclick = () => { addFormDiv.style.display = 'none'; };
         
         document.getElementById('confirmAddFishBtn').onclick = async () => {
-            const titleInput = document.getElementById('newFishTitle');
-            const fileInput = document.getElementById('newFishImage');
-            const title = titleInput.value.trim();
-            const file = fileInput.files[0];
-            
+            const title = document.getElementById('newFishTitle').value.trim();
+            const file = document.getElementById('newFishImage').files[0];
             if (!title) { alert("请输入鱼名"); return; }
-            if (!file) { alert("请选择一张鱼儿图片"); return; }
-            
-            const uploadBtn = document.getElementById('confirmAddFishBtn');
-            uploadBtn.disabled = true;
-            uploadBtn.innerText = "上传中...";
-            
+            if (!file) { alert("请选择图片"); return; }
+            const btn = document.getElementById('confirmAddFishBtn');
+            btn.disabled = true;
+            btn.innerText = "上传中...";
             try {
                 await addNewFish(title, file);
-                alert(`✅ 成功添加新鱼: ${title}`);
-                titleInput.value = "";
-                fileInput.value = "";
+                alert(`✅ 添加成功: ${title}`);
+                document.getElementById('newFishTitle').value = '';
+                document.getElementById('newFishImage').value = '';
                 addFormDiv.style.display = 'none';
                 await loadAllFishes();
                 await renderHome();
-                if (currentView === 'home') renderHome();
             } catch (err) {
-                console.error("添加错误:", err);
                 alert("添加失败: " + err.message);
             } finally {
-                uploadBtn.disabled = false;
-                uploadBtn.innerText = "✨ 确认上传并入库";
+                btn.disabled = false;
+                btn.innerText = "✨ 确认上传并入库";
             }
         };
         
-        const searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('input', (e) => {
+        document.getElementById('searchInput').addEventListener('input', (e) => {
             searchKeyword = e.target.value;
             renderHome();
         });
         
-        const sortBtns = document.querySelectorAll('.sort-btn');
-        sortBtns.forEach(btn => {
+        document.querySelectorAll('.sort-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                const sortType = btn.getAttribute('data-sort');
-                currentSort = sortType;
-                sortBtns.forEach(b => b.classList.remove('active'));
+                currentSort = btn.getAttribute('data-sort');
+                document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 renderHome();
             });
@@ -696,16 +487,6 @@
             await loadAllFishes();
             document.querySelector('.sort-btn[data-sort="hot"]').classList.add('active');
             showHome();
-        }
-        
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
         }
         
         init();
