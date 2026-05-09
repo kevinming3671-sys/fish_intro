@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>泡泡鱼3 · 升级计算器 | 资源规划助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #c2e0f0 0%, #8ac4d8 100%);
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            color: #02457a;
+            padding: 24px 20px;
+        }
+
+        /* 海洋装饰 */
+        body::before {
+            content: "🐟";
+            font-size: 130px;
+            position: fixed;
+            bottom: 10px;
+            left: 0px;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::after {
+            content: "🐠";
+            font-size: 100px;
+            position: fixed;
+            top: 15%;
+            right: 10px;
+            opacity: 0.1;
+            pointer-events: none;
+            animation: floatFish 8s infinite ease-in-out;
+            z-index: 0;
+        }
+        @keyframes floatFish {
+            0% { transform: translateY(0px) rotate(5deg);}
+            50% { transform: translateY(-20px) rotate(8deg);}
+            100% { transform: translateY(0px) rotate(5deg);}
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(2px);
+            border-radius: 56px;
+            box-shadow: 0 25px 45px rgba(0, 30, 50, 0.35);
+            overflow: hidden;
+            padding: 32px 36px 48px;
+            border: 1px solid rgba(255,255,240,0.7);
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .hero h1 {
+            font-size: 2.7rem;
+            background: linear-gradient(135deg, #016b8c, #02a9c0, #027a9e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+        .hero p {
+            background: rgba(255,248,205,0.8);
+            display: inline-block;
+            padding: 6px 22px;
+            border-radius: 50px;
+            margin-top: 12px;
+            font-weight: 500;
+        }
+
+        .calc-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            margin: 28px 0 20px;
+        }
+        .panel {
+            flex: 1;
+            min-width: 280px;
+            background: rgba(236, 249, 255, 0.7);
+            border-radius: 44px;
+            padding: 20px 26px;
+            backdrop-filter: blur(1px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+            border: 1px solid #b9def0;
+        }
+        .panel h3 {
+            font-size: 1.7rem;
+            border-left: 8px solid #2b9fc2;
+            padding-left: 18px;
+            margin-bottom: 20px;
+            color: #01577a;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #03658c;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 60px;
+            border: 1px solid #b1d8ef;
+            background: white;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #2b9fc2;
+            box-shadow: 0 0 0 3px rgba(43,159,194,0.2);
+        }
+        .inline-hint {
+            font-size: 0.75rem;
+            color: #2f8eae;
+            margin-top: 6px;
+        }
+
+        .fish-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #f3fafd;
+            border-radius: 28px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        .fish-table th, .fish-table td {
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid #cae3f0;
+        }
+        .fish-table th {
+            background: #bee0ef;
+            color: #024e6b;
+        }
+        .exp-badge {
+            background: #e7f3f9;
+            border-radius: 28px;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 0.85rem;
+        }
+
+        .result-area {
+            background: #dff3fc;
+            border-radius: 44px;
+            padding: 22px 28px;
+            margin-top: 25px;
+            border: 1px solid #9ecde2;
+        }
+        .result-card {
+            background: white;
+            border-radius: 32px;
+            padding: 18px 24px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .result-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #015c7a;
+            margin-bottom: 12px;
+        }
+        .need-fish {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #bf5b2c;
+            background: #fff1e6;
+            display: inline-block;
+            padding: 6px 24px;
+            border-radius: 60px;
+            margin-top: 10px;
+        }
+        .note {
+            font-size: 0.85rem;
+            color: #2e6b84;
+            background: #fef7d2;
+            padding: 10px 18px;
+            border-radius: 28px;
+            margin-top: 15px;
+        }
+        button {
+            background: #2b9fc2;
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 14px 28px;
+            border-radius: 60px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+            font-family: inherit;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background: #1e7f9c;
+            transform: scale(0.98);
+        }
+        hr {
+            margin: 18px 0;
+            border-color: #bbdef0;
+        }
+        footer {
+            text-align: center;
+            margin-top: 38px;
+            font-size: 0.7rem;
+            color: #386a80;
+        }
+
+        @media (max-width: 780px) {
+            .container {
+                padding: 18px 20px;
+            }
+            .hero h1 {
+                font-size: 1.9rem;
+            }
+            .panel h3 {
+                font-size: 1.4rem;
+            }
+            .need-fish {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hero">
+        <h1>🐚 升级资源计算器 · 泡泡鱼3 🧮</h1>
+        <p>从1级到21级 · 经验缺口 & 所需鱼苗规划</p>
+    </div>
+
+    <div class="calc-grid">
+        <!-- 左侧：等级 & 经验-->
+        <div class="panel">
+            <h3>🎯 等级经验</h3>
+            <div class="input-group">
+                <label>📍 当前等级 (1~20)</label>
+                <input type="number" id="currentLv" min="1" max="20" value="1" step="1">
+                <div class="inline-hint">当前角色等级（1级开始）</div>
+            </div>
+            <div class="input-group">
+                <label>📊 当前经验值 (当前等级已有经验)</label>
+                <input type="number" id="currentExp" min="0" value="0" step="1">
+                <div class="inline-hint">例如19级1000/49263经验，填1000</div>
+            </div>
+            <div class="input-group">
+                <label>🏁 目标等级 (最高21)</label>
+                <input type="number" id="targetLv" min="1" max="21" value="21" step="1">
+                <div class="inline-hint">升级到目标等级所需总经验</div>
+            </div>
+            <div class="input-group">
+                <label>✨ 额外全图满级经验 (自行输入)</label>
+                <input type="number" id="bonusExp" value="0" step="1" placeholder="0">
+                <div class="inline-hint">全图鉴满级奖励经验 / 其他额外经验</div>
+            </div>
+        </div>
+
+        <!-- 右侧：现有鱼经验配置-->
+        <div class="panel">
+            <h3>🐟 已有鱼精确经验</h3>
+            <div class="exp-badge">
+                💡 每条鱼提供的未来经验 = 从当前等级升到满级所获得的总经验。<br>
+                例：3星鱼目前3级 →可获得4级(160)+5级(500)=660经验/条。<br>
+                <strong>请按实际填写现有鱼的数量及当前等级。</strong>
+            </div>
+            <div style="max-height: 400px; overflow-y: auto; padding-right: 6px;">
+                <!-- 一星鱼 -->
+                <div class="fish-item" data-star="1">
+                    <label>⭐ 一星鱼 (1-3级经验:10,20,60)</label>
+                    <div style="display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap;">
+                        <input type="number" id="star1_cnt" placeholder="数量" value="0" min="0" style="flex:1; border-radius:40px; padding:8px;">
+                        <select id="star1_lv" style="flex:1.5; border-radius:40px; padding:8px;">
+                            <option value="1">1级 (可获2-3级经验: 20+60=80)</option>
+                            <option value="2">2级 (可获3级经验: 60)</option>
+                            <option value="3">3级 (已满级, 后续0经验)</option>
+                        </select>
+                    </div>
+                    <div class="inline-hint" id="star1_hint"></div>
+                </div>
+                <!-- 二星鱼 -->
+                <div class="fish-item" data-star="2" style="margin-top: 18px;">
+                    <label>⭐⭐ 二星鱼 (1-4级经验:20,40,60,180)</label>
+                    <div style="display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap;">
+                        <input type="number" id="star2_cnt" placeholder="数量" value="0" min="0" style="flex:1; border-radius:40px; padding:8px;">
+                        <select id="star2_lv" style="flex:1.5; border-radius:40px; padding:8px;">
+                            <option value="1">1级 (2+3+4级: 40+60+180=280)</option>
+                            <option value="2">2级 (3+4级: 60+180=240)</option>
+                            <option value="3">3级 (4级: 180)</option>
+                            <option value="4">4级 (满级无后续)</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- 三星鱼 -->
+                <div class="fish-item" data-star="3" style="margin-top: 18px;">
+                    <label>⭐⭐⭐ 三星鱼 (1-5级经验:40,80,120,160,500)</label>
+                    <div style="display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap;">
+                        <input type="number" id="star3_cnt" placeholder="数量" value="0" min="0" style="flex:1; border-radius:40px; padding:8px;">
+                        <select id="star3_lv" style="flex:1.5; border-radius:40px; padding:8px;">
+                            <option value="1">1级 (2→5级:80+120+160+500=860)</option>
+                            <option value="2">2级 (3→5级:120+160+500=780)</option>
+                            <option value="3">3级 (4→5级:160+500=660)</option>
+                            <option value="4">4级 (5级:500)</option>
+                            <option value="5">5级 (满级无后续)</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- 四星鱼 -->
+                <div class="fish-item" data-star="4" style="margin-top: 18px;">
+                    <label>⭐⭐⭐⭐ 四星鱼 (1-5级经验:80,160,240,320,1000)</label>
+                    <div style="display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap;">
+                        <input type="number" id="star4_cnt" placeholder="数量" value="0" min="0" style="flex:1; border-radius:40px; padding:8px;">
+                        <select id="star4_lv" style="flex:1.5; border-radius:40px; padding:8px;">
+                            <option value="1">1级 (2+3+4+5级:160+240+320+1000=1720)</option>
+                            <option value="2">2级 (3+4+5:240+320+1000=1560)</option>
+                            <option value="3">3级 (4+5:320+1000=1320)</option>
+                            <option value="4">4级 (5级:1000)</option>
+                            <option value="5">5级 (满级无后续)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button id="calculateBtn">🧮 计算所需补齐鱼苗 🐠</button>
+
+    <div id="resultArea" class="result-area">
+        <div class="result-card">
+            <div class="result-title">📈 升级缺口分析</div>
+            <div id="totalNeedBlock">—— 等待计算 ——</div>
+            <div id="existingFishBlock"></div>
+        </div>
+        <div class="result-card">
+            <div class="result-title">🐟 补齐方案 (默认三星鱼为基准)</div>
+            <div id="resultFishCount">-</div>
+            <div class="note" id="convertNote">
+                💎 一条四星鱼经验 ≈ 两条三星鱼经验 (完整经验值比较: 四星鱼完整1720 ≈ 三星鱼860*2)。<br>
+                您可根据库存灵活使用四星鱼/二星鱼自行替换。
+            </div>
+        </div>
+    </div>
+    <footer>
+        🎣 升级所需经验序列（1→2级101 、2→3级50、3→4级75……21级满）<br>
+        注：计算器已扣除“已有鱼剩余可获经验” + “额外全图经验”，剩余缺口按三星鱼完整经验(860)向上取整。
+    </footer>
+</div>
+
+<script>
+    // 从1级开始，每次升级所需经验 (1→2级 至 20→21级)
+    const upgradeCost = [
+        101, 50, 75, 112, 169, 253, 380, 569, 854, 1282,
+        1922, 2883, 4325, 6487, 9731, 14597, 21895, 32842, 49263, 73894
+    ]; // 总共20段：从1级升2级 到 20级升21级
+
+    // 获取从 current等级 升到 target等级 所需总经验
+    function getRequiredExpFromLevels(currentLv, targetLv) {
+        if (currentLv >= targetLv) return 0;
+        let total = 0;
+        for (let lv = currentLv; lv < targetLv; lv++) {
+            total += upgradeCost[lv - 1]; // 索引0对应1→2
+        }
+        return total;
+    }
+
+    // 各星级鱼的 等级 -> 后续可获得经验映射 (从当前等级升到满级所获得的经验总和)
+    // 一星鱼 满级3级
+    function getStar1FutureExp(level) {
+        const expTable = {1: 20+60, 2: 60, 3: 0};  // 1级可拿2+3级经验 20+60=80；2级可拿3级经验60
+        return expTable[level] || 0;
+    }
+    // 二星鱼 满级4级 经验数据: 20,40,60,180
+    function getStar2FutureExp(level) {
+        if(level === 1) return 40+60+180;   // 280
+        if(level === 2) return 60+180;      // 240
+        if(level === 3) return 180;         // 180
+        return 0;
+    }
+    // 三星鱼 满级5级 经验:40,80,120,160,500
+    function getStar3FutureExp(level) {
+        if(level === 1) return 80+120+160+500;   // 860
+        if(level === 2) return 120+160+500;      // 780
+        if(level === 3) return 160+500;          // 660
+        if(level === 4) return 500;              // 500
+        return 0;
+    }
+    // 四星鱼 满级5级 经验:80,160,240,320,1000
+    function getStar4FutureExp(level) {
+        if(level === 1) return 160+240+320+1000;  // 1720
+        if(level === 2) return 240+320+1000;      // 1560
+        if(level === 3) return 320+1000;          // 1320
+        if(level === 4) return 1000;              // 1000
+        return 0;
+    }
+
+    function calculate() {
+        // ---- 获取输入 ----
+        let currentLv = parseInt(document.getElementById('currentLv').value);
+        let currentExp = parseInt(document.getElementById('currentExp').value) || 0;
+        let targetLv = parseInt(document.getElementById('targetLv').value);
+        let bonus = parseInt(document.getElementById('bonusExp').value) || 0;
+
+        if (isNaN(currentLv)) currentLv = 1;
+        if (isNaN(targetLv)) targetLv = 21;
+        if (currentLv < 1) currentLv = 1;
+        if (targetLv > 21) targetLv = 21;
+        if (targetLv < currentLv) {
+            document.getElementById('totalNeedBlock').innerHTML = '<span style="color:#b33;">⚠️ 目标等级不能低于当前等级，请调整。</span>';
+            document.getElementById('existingFishBlock').innerHTML = '';
+            document.getElementById('resultFishCount').innerHTML = '—';
+            return;
+        }
+
+        // 1️⃣ 计算从当前等级升到目标等级所需要的总经验 (不包括当前已获得的经验值溢出的情况)
+        const needRawExp = getRequiredExpFromLevels(currentLv, targetLv);
+        // 当前等级已有点数，这部分已经拥有，从需求中减去
+        let requiredTotal = needRawExp - currentExp;
+        if (requiredTotal < 0) requiredTotal = 0;
+
+        // 2️⃣ 已有鱼的经验计算
+        let star1_cnt = parseInt(document.getElementById('star1_cnt').value) || 0;
+        let star1_lv = parseInt(document.getElementById('star1_lv').value);
+        let star2_cnt = parseInt(document.getElementById('star2_cnt').value) || 0;
+        let star2_lv = parseInt(document.getElementById('star2_lv').value);
+        let star3_cnt = parseInt(document.getElementById('star3_cnt').value) || 0;
+        let star3_lv = parseInt(document.getElementById('star3_lv').value);
+        let star4_cnt = parseInt(document.getElementById('star4_cnt').value) || 0;
+        let star4_lv = parseInt(document.getElementById('star4_lv').value);
+
+        let star1ExpEach = getStar1FutureExp(star1_lv);
+        let star2ExpEach = getStar2FutureExp(star2_lv);
+        let star3ExpEach = getStar3FutureExp(star3_lv);
+        let star4ExpEach = getStar4FutureExp(star4_lv);
+
+        let fishTotalExp = star1_cnt * star1ExpEach + star2_cnt * star2ExpEach + star3_cnt * star3ExpEach + star4_cnt * star4ExpEach;
+
+        // 展示每条鱼预期贡献的细节
+        let detailsHtml = `<div style="font-size:0.9rem; margin-top:8px;">`;
+        if(star1_cnt>0 && star1ExpEach>0) detailsHtml += `⭐ 一星鱼 ${star1_cnt}条 × ${star1ExpEach}经验 = ${star1_cnt*star1ExpEach}<br>`;
+        if(star2_cnt>0 && star2ExpEach>0) detailsHtml += `⭐⭐ 二星鱼 ${star2_cnt}条 × ${star2ExpEach}经验 = ${star2_cnt*star2ExpEach}<br>`;
+        if(star3_cnt>0 && star3ExpEach>0) detailsHtml += `⭐⭐⭐ 三星鱼 ${star3_cnt}条 × ${star3ExpEach}经验 = ${star3_cnt*star3ExpEach}<br>`;
+        if(star4_cnt>0 && star4ExpEach>0) detailsHtml += `⭐⭐⭐⭐ 四星鱼 ${star4_cnt}条 × ${star4ExpEach}经验 = ${star4_cnt*star4ExpEach}<br>`;
+        if(fishTotalExp === 0) detailsHtml += `暂无有效经验鱼（或鱼已满级）。`;
+        detailsHtml += `</div>`;
+
+        // 额外全图经验
+        let totalExisting = fishTotalExp + bonus;
+        
+        let remainingExp = requiredTotal - totalExisting;
+        if(remainingExp < 0) remainingExp = 0;
+
+        // 3️⃣ 补齐方案：以三星鱼完整经验(860)为单位向上取整
+        const FULL_STAR3_EXP = 860;   // 一条三星鱼从1级到5级完整经验
+        let needStar3Fish = 0;
+        let needRaw = remainingExp;
+        if (remainingExp > 0) {
+            needStar3Fish = Math.ceil(remainingExp / FULL_STAR3_EXP);
+        } else {
+            needStar3Fish = 0;
+        }
+
+        // 同时计算如果采用四星鱼完整经验（1720）大约需要多少条
+        const FULL_STAR4_EXP = 1720;
+        let needStar4Equiv = 0;
+        if (remainingExp > 0) needStar4Equiv = Math.ceil(remainingExp / FULL_STAR4_EXP);
+        
+        // 在页面展示
+        let needBlockHtml = `
+            <strong>🔹 从 Lv.${currentLv} → Lv.${targetLv}</strong> 所需总经验：${needRawExp.toFixed(0)}<br>
+            <strong>🔹 当前等级已有经验：</strong> ${currentExp} 点<br>
+            <strong>🔹 基础需求缺口：</strong> ${requiredTotal.toFixed(0)} 点<br>
+            <strong>🔹 额外全图满级经验加成：</strong> +${bonus} 点<br>
+            <strong>🔹 现有鱼未来可获经验总值：</strong> ${fishTotalExp.toFixed(0)} 点
+            ${detailsHtml}
+            <hr style="margin:10px 0;">
+            <strong>🎯 剩余需要补齐的经验：</strong> ${remainingExp.toFixed(0)} 点
+        `;
+        document.getElementById('totalNeedBlock').innerHTML = needBlockHtml;
+        
+        let fishResultHtml = '';
+        if (remainingExp === 0) {
+            fishResultHtml = `<div style="font-size:1.2rem;">✅ 已有鱼经验 + 全图经验已经足够升级！无需额外养鱼 🎉</div>`;
+        } else {
+            fishResultHtml = `
+                <div>🐟 需要补齐 <strong style="font-size:1.8rem;">${remainingExp}</strong> 点经验。</div>
+                <div class="need-fish">📦 需要三星鱼完整培养: ${needStar3Fish} 条</div>
+                <div style="margin-top: 12px;">👉 基于每条三星鱼从1级升至5级可获得 <strong>860经验</strong> (40+80+120+160+500)。</div>
+                <div style="margin-top: 8px;">✨ 如使用四星鱼完整培养: 约需 ${needStar4Equiv} 条 (每条四星鱼完整1720经验)。<br>
+                🌟 二星鱼完整经验280，一星鱼完整经验80，可根据需求比例灵活替换。</div>
+            `;
+        }
+        document.getElementById('resultFishCount').innerHTML = fishResultHtml;
+
+        // 补充换算注释清晰显示一条四星=两条三星
+        const noteDiv = document.getElementById('convertNote');
+        if (noteDiv) {
+            noteDiv.innerHTML = `💎 经验等价换算：一条四星鱼完整经验(1720) ≈ 两条三星鱼完整经验(860×2=1720)。<br>
+            如需更精确，可自行按比例计算：剩余经验 ${remainingExp} → 使用四星鱼数量 = ceil(${remainingExp}/1720)。<br>
+            📌 当前按三星鱼基准推荐条数，若使用部分四星鱼可减少数量。`;
+        }
+    }
+
+    // 动态显示每条鱼的预期经验（提升页面的信息提示）
+    function updateFishHint() {
+        const star1Lv = document.getElementById('star1_lv').value;
+        const star2Lv = document.getElementById('star2_lv').value;
+        const star3Lv = document.getElementById('star3_lv').value;
+        const star4Lv = document.getElementById('star4_lv').value;
+        let hint1 = '', hint2 = '', hint3 = '', hint4 = '';
+        if (star1Lv == 1) hint1 = '⭐ 每条一星鱼1级可获80经验';
+        else if (star1Lv == 2) hint1 = '⭐ 每条一星鱼2级可获60经验';
+        else hint1 = '⭐ 一星鱼满级，无后续经验';
+        if (star2Lv == 1) hint2 = '⭐⭐ 二星鱼1级可获280经验';
+        else if (star2Lv == 2) hint2 = '⭐⭐ 二星鱼2级可获240经验';
+        else if (star2Lv == 3) hint2 = '⭐⭐ 二星鱼3级可获180经验';
+        else hint2 = '⭐⭐ 二星鱼满级无后续';
+        if (star3Lv == 1) hint3 = '⭐⭐⭐ 三星鱼1级可获860经验 (全满)';
+        else if (star3Lv == 2) hint3 = '⭐⭐⭐ 三星鱼2级可获780经验';
+        else if (star3Lv == 3) hint3 = '⭐⭐⭐ 三星鱼3级可获660经验';
+        else if (star3Lv == 4) hint3 = '⭐⭐⭐ 三星鱼4级可获500经验';
+        else hint3 = '⭐⭐⭐ 三星鱼满级无后续';
+        if (star4Lv == 1) hint4 = '⭐⭐⭐⭐ 四星鱼1级可获1720经验 (全满)';
+        else if (star4Lv == 2) hint4 = '⭐⭐⭐⭐ 四星鱼2级可获1560经验';
+        else if (star4Lv == 3) hint4 = '⭐⭐⭐⭐ 四星鱼3级可获1320经验';
+        else if (star4Lv == 4) hint4 = '⭐⭐⭐⭐ 四星鱼4级可获1000经验';
+        else hint4 = '⭐⭐⭐⭐ 四星鱼满级无后续';
+        document.getElementById('star1_hint') && (document.getElementById('star1_hint').innerHTML = hint1);
+        // 追加其他提示可简单附加
+        let extraHintDiv = document.querySelector('.exp-badge');
+        if(extraHintDiv) {
+            extraHintDiv.innerHTML = `💡 每条鱼提供的未来经验 = 从当前等级升到满级所获得的总经验。<br>
+            例：3星鱼目前3级 →可获得4级(160)+5级(500)=660经验/条。<br>
+            <span style="font-size:0.75rem;">当前选择: ${hint1} / ${hint2} / ${hint3} / ${hint4}</span>`;
+        }
+    }
+
+    document.getElementById('star1_lv').addEventListener('change', updateFishHint);
+    document.getElementById('star2_lv').addEventListener('change', updateFishHint);
+    document.getElementById('star3_lv').addEventListener('change', updateFishHint);
+    document.getElementById('star4_lv').addEventListener('change', updateFishHint);
+    document.getElementById('calculateBtn').addEventListener('click', calculate);
+    
+    updateFishHint();
+    // 初始计算一次展示样例
+    window.addEventListener('load', () => {
+        calculate();
+    });
+</script>
+</body>
+</html>
