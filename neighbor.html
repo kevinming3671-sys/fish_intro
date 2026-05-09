@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>泡泡鱼图鉴 | 社区养鱼评分站</title>
+    <title>泡泡鱼图鉴 | 社区养鱼评分站 · 点赞互动</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -277,14 +277,39 @@
             border-left: 5px solid #f5b042;
             position: relative;
         }
+        .comment-footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .like-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #6c8ba0;
+            transition: 0.2s;
+            padding: 4px 8px;
+            border-radius: 30px;
+        }
+        .like-btn:hover {
+            background: #eef2f5;
+            color: #f59e0b;
+        }
+        .like-btn.liked {
+            color: #f59e0b;
+            font-weight: bold;
+        }
         .delete-comment-btn {
-            position: absolute;
-            right: 12px;
-            top: 12px;
             background: #e0e7f0;
             border: none;
             border-radius: 30px;
-            padding: 2px 10px;
+            padding: 4px 10px;
             cursor: pointer;
             font-size: 0.7rem;
             transition: 0.1s;
@@ -344,7 +369,7 @@
         </div>
         <div id="detailContent"></div>
     </div>
-    <footer>🐠 评价实时同步 · 可匿名发布 · 只有无评论的鱼才能被删除 · 只能删除自己的评论</footer>
+    <footer>🐠 评价实时同步 · 可匿名发布 · 点赞互动 💖</footer>
 </div>
 
 <script>
@@ -398,6 +423,9 @@
         let currentView = "home";
         let currentFishId = null;
         
+        // 点赞缓存: 记录当前用户已经点赞过的评论ID (用于前端即时反馈)
+        let userLikedComments = new Set();
+        
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>]/g, function(m) {
@@ -413,6 +441,38 @@
             const timestamp = Date.now();
             const randomHash = Math.random().toString(36).substring(2, 10);
             return `fish_${timestamp}_${randomHash}.${ext}`;
+        }
+        
+        // 获取某条评论的点赞数和当前用户是否点赞
+        async function fetchCommentLikes(commentId) {
+            const { data, error } = await supabase
+                .from('comment_likes')
+                .select('user_uuid')
+                .eq('comment_id', commentId);
+            if (error) return { likeCount: 0, userLiked: false };
+            const userLiked = data.some(like => like.user_uuid === deviceUUID);
+            return { likeCount: data.length, userLiked };
+        }
+        
+        // 切换点赞状态
+        async function toggleLike(commentId, currentLikeCount, isCurrentlyLiked) {
+            if (isCurrentlyLiked) {
+                // 取消点赞
+                const { error } = await supabase
+                    .from('comment_likes')
+                    .delete()
+                    .eq('comment_id', commentId)
+                    .eq('user_uuid', deviceUUID);
+                if (error) throw error;
+                return { likeCount: currentLikeCount - 1, liked: false };
+            } else {
+                // 添加点赞
+                const { error } = await supabase
+                    .from('comment_likes')
+                    .insert({ comment_id: commentId, user_uuid: deviceUUID });
+                if (error) throw error;
+                return { likeCount: currentLikeCount + 1, liked: true };
+            }
         }
         
         async function fetchFishStats(fishId) {
@@ -481,7 +541,6 @@
                 const avgDisplay = fish.avgScore ? fish.avgScore.toFixed(1) : '暂无';
                 const starShow = fish.avgScore ? '⭐ ' + avgDisplay : '🐟 待评分';
                 const commentCount = fish.commentCount || 0;
-                // 关键修复：根据评论数决定删除按钮是否可用
                 const canDelete = commentCount === 0;
                 const deleteBtnClass = canDelete ? 'delete-fish-btn' : 'delete-fish-btn disabled';
                 const deleteBtnTitle = canDelete ? '删除此鱼' : `有 ${commentCount} 条评论，不可删除`;
@@ -501,7 +560,6 @@
             }
             grid.innerHTML = html;
             
-            // 只为可删除的按钮绑定事件（不可删除的按钮已禁用，无需绑定）
             document.querySelectorAll('.delete-fish-btn:not(.disabled)').forEach(btn => {
                 btn.removeEventListener('click', handleDeleteFish);
                 btn.addEventListener('click', handleDeleteFish);
@@ -514,14 +572,13 @@
             const title = this.getAttribute('data-title');
             const commentCount = parseInt(this.getAttribute('data-comment-count'));
             
-            // 二次确认：如果评论数 > 0，不允许删除
             if (commentCount > 0) {
                 alert(`❌ 无法删除“${title}”：该鱼已有 ${commentCount} 条评论。\n只有无评论的鱼才可被删除，以保护其他鱼友的评价。`);
                 return;
             }
             
             if (confirm(`⚠️ 确定永久删除鱼“${title}”吗？\n（该鱼暂无评论，可安全删除）`)) {
-                await supabase.from('fishes').delete().eq('id', fishId);
+                await supabase.from('comments').delete().eq('fish_id', fishId);
                 await refreshFishList();
                 if (currentView === 'detail' && currentFishId === fishId) {
                     document.getElementById('detailView').style.display = 'none';
@@ -559,17 +616,29 @@
                 avgScore = Math.round((totalScore / commentsList.length) * 10) / 10;
             }
             
+            // 为每条评论获取点赞数
             let commentsHtml = '';
             for (let c of commentsList) {
                 const starShow = "★".repeat(c.score) + "☆".repeat(5 - c.score);
                 const time = new Date(c.created_at).toLocaleString();
                 const isOwner = c.device_uuid === deviceUUID;
+                
+                // 获取该评论的点赞状态
+                const likeInfo = await fetchCommentLikes(c.id);
+                const isLiked = likeInfo.userLiked;
+                const likeCount = likeInfo.likeCount;
+                
                 const deleteButton = isOwner ? `<button class="delete-comment-btn" data-cid="${c.id}" onclick="event.stopPropagation();">🗑️ 删除</button>` : '';
                 commentsHtml += `
                     <div class="comment-item" data-comment-id="${c.id}">
                         <div><strong>🐟 ${escapeHtml(c.nick || '匿名鱼友')}</strong> ${starShow} <span style="font-size:0.7rem;">${time}</span></div>
                         <div style="margin-top:5px;">${escapeHtml(c.content)}</div>
-                        ${deleteButton}
+                        <div class="comment-footer">
+                            <button class="like-btn ${isLiked ? 'liked' : ''}" data-cid="${c.id}" data-like-count="${likeCount}">
+                                👍 点赞 <span class="like-count">${likeCount}</span>
+                            </button>
+                            ${deleteButton}
+                        </div>
                     </div>
                 `;
             }
@@ -615,6 +684,7 @@
             `;
             document.getElementById('detailContent').innerHTML = html;
             
+            // 星星组件逻辑
             let selectedStar = null;
             const starContainer = document.getElementById('detailStars');
             function renderStars(selected) {
@@ -644,6 +714,7 @@
                 }
             });
             
+            // 提交评论
             document.getElementById('submitDetailComment').onclick = async () => {
                 if (selectedStar === null) { 
                     alert("🐟 请先点击星星为该鱼打分！"); 
@@ -687,6 +758,32 @@
                 await showDetailView(fishId);
             };
             
+            // 点赞按钮事件绑定 + 删除事件
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const commentId = parseInt(btn.getAttribute('data-cid'));
+                    const currentCount = parseInt(btn.getAttribute('data-like-count') || '0');
+                    const isCurrentlyLiked = btn.classList.contains('liked');
+                    
+                    try {
+                        const result = await toggleLike(commentId, currentCount, isCurrentlyLiked);
+                        // 更新UI
+                        btn.setAttribute('data-like-count', result.likeCount);
+                        const likeSpan = btn.querySelector('.like-count');
+                        if (likeSpan) likeSpan.innerText = result.likeCount;
+                        if (result.liked) {
+                            btn.classList.add('liked');
+                        } else {
+                            btn.classList.remove('liked');
+                        }
+                    } catch (err) {
+                        console.error("点赞失败:", err);
+                        alert("操作失败，请重试");
+                    }
+                };
+            });
+            
             document.querySelectorAll('.delete-comment-btn').forEach(btn => {
                 btn.onclick = async (e) => {
                     e.stopPropagation();
@@ -705,6 +802,8 @@
                             alert("❌ 无权删除他人的评论！");
                             return;
                         }
+                        // 同时删除该评论的所有点赞记录
+                        await supabase.from('comment_likes').delete().eq('comment_id', commentId);
                         await supabase.from('comments').delete().eq('id', commentId);
                         await showDetailView(fishId);
                     }
