@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>泡泡鱼图鉴 | 社区养鱼评分站</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #c2e0f0 0%, #8ac4d8 100%);
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            padding: 1.5rem;
+            min-height: 100vh;
+            color: #02457a;
+        }
+
+        /* 主容器 + 视图切换 */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(3px);
+            border-radius: 2.5rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
+            padding: 1.8rem 2rem 2rem;
+            transition: all 0.2s;
+        }
+
+        /* 头部导航 */
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px dashed #7fc5df;
+        }
+        .logo h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #016b8c, #02a9c0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        .nav-btn {
+            background: #2b9fc2;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .nav-btn.active {
+            background: #f59e0b;
+            box-shadow: 0 0 0 2px #fff3e0;
+        }
+        .nav-btn.danger {
+            background: #dc7a4c;
+        }
+        .add-fish-btn {
+            background: #2c6e3c;
+        }
+
+        /* 首页工具栏 */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+            margin-bottom: 1.8rem;
+            background: #f4fbfecc;
+            padding: 0.8rem 1.2rem;
+            border-radius: 2rem;
+        }
+        .search-box input {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            border: 1px solid #cde5f0;
+            width: 220px;
+        }
+        .sort-box {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .sort-btn {
+            background: #e7f2f7;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .sort-btn.active {
+            background: #f59e0b;
+            color: white;
+        }
+
+        /* 卡片网格 */
+        .fish-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.8rem;
+            margin-top: 1rem;
+        }
+        .fish-card {
+            background: white;
+            border-radius: 1.8rem;
+            overflow: hidden;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+        .fish-card:hover {
+            transform: translateY(-6px);
+        }
+        .fish-card-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: #d9eef5;
+        }
+        .fish-card-info {
+            padding: 1rem;
+        }
+        .fish-card-title {
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+        .fish-card-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #2c6f8c;
+        }
+        .delete-fish-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            width: 32px;
+            height: 32px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+        .delete-fish-btn:hover {
+            background: #e2583e;
+        }
+
+        /* 表单新增区域 */
+        .add-fish-form {
+            background: #fefce8;
+            border-radius: 1.8rem;
+            padding: 1.2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+            border: 1px solid #ffe3a3;
+        }
+        .add-fish-form input {
+            flex: 2;
+            padding: 0.7rem;
+            border-radius: 2rem;
+            border: 1px solid #ffe0a3;
+        }
+        .add-fish-form button {
+            background: #2b9fc2;
+            padding: 0.6rem 1.5rem;
+            border-radius: 2rem;
+        }
+
+        /* 详情页 (鱼评区) */
+        .detail-section {
+            animation: fadeIn 0.2s;
+        }
+        .back-btn {
+            background: #365f77;
+            margin-bottom: 1rem;
+        }
+        .fish-detail-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            background: #f5fbfe;
+            padding: 1.2rem;
+            border-radius: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .detail-img {
+            width: 280px;
+            object-fit: cover;
+            border-radius: 1.5rem;
+            background: #e6f4f9;
+        }
+        .detail-meta {
+            flex: 1;
+        }
+        .rating-stars {
+            display: flex;
+            gap: 0.5rem;
+            margin: 0.6rem 0;
+        }
+        .star {
+            font-size: 2rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #cbd5e1;
+        }
+        .star.active {
+            color: #f5b042;
+        }
+        .score-text-badge {
+            background: #243b44;
+            display: inline-block;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            color: white;
+            font-size: 0.75rem;
+        }
+        .comment-item {
+            background: white;
+            border-radius: 1.2rem;
+            margin: 0.8rem 0;
+            padding: 0.8rem 1rem;
+            border-left: 5px solid #f5b042;
+            position: relative;
+        }
+        .delete-comment-btn {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            background: #e0e7f0;
+            border: none;
+            border-radius: 30px;
+            padding: 2px 10px;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+        button {
+            transition: 0.1s;
+            cursor: pointer;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.7rem;
+        }
+        @media (max-width: 680px) {
+            .app-container { padding: 1rem; }
+            .toolbar { flex-direction: column; }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="app-container" id="app">
+    <div class="nav-header">
+        <div class="logo"><h1>🐟 泡泡鱼图鉴 · 渔友社区</h1></div>
+        <div class="nav-buttons">
+            <button class="nav-btn" id="goHomeBtn">🏠 首页</button>
+            <button class="nav-btn add-fish-btn" id="showAddFormBtn">➕ 新鱼入库</button>
+        </div>
+    </div>
+
+    <!-- 首页视图 -->
+    <div id="homeView">
+        <div class="toolbar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 搜鱼名 / 标题...">
+            </div>
+            <div class="sort-box">
+                <span>排序：</span>
+                <button class="sort-btn" data-sort="hot">🔥 热度(评分人数)</button>
+                <button class="sort-btn" data-sort="score">⭐ 平均分</button>
+                <button class="sort-btn" data-sort="time">🕒 最新入库</button>
+            </div>
+        </div>
+        <!-- 新增鱼快捷表单 (折叠/展开) -->
+        <div id="inlineAddForm" style="display: none;" class="add-fish-form">
+            <input type="text" id="newFishTitle" placeholder="鱼种名称 (例如 梦幻荧光鱼)" maxlength="40">
+            <input type="file" id="newFishImage" accept="image/*">
+            <button id="confirmAddFishBtn">✨ 确认上传并入库</button>
+            <button id="cancelAddBtn" style="background:#aaa;">取消</button>
+        </div>
+        <div id="fishGridContainer" class="fish-grid">加载鱼塘中...</div>
+    </div>
+
+    <!-- 详情视图 (单条鱼评分+评论) -->
+    <div id="detailView" style="display: none;">
+        <button class="nav-btn back-btn" id="backHomeBtn">← 返回鱼塘</button>
+        <div id="detailContent"></div>
+    </div>
+    <footer>🐠 所有评价实时同步 · 可删鱼/删评(需确认) · 图片直传Supabase</footer>
+</div>
+
+<script>
+    (async function() {
+        // ================== SUPABASE 凭证 =====================
+        const SUPABASE_URL = "https://lciccmgqjvmzvvpytshp.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_BabKCuxCHtQMflQNefq_vw_dWxNuIz3";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const STORAGE_BUCKET = "fish-images";
+        
+        // 全局数据
+        let allFishes = [];         // 鱼列表 [{ id, title, image_url, created_at }]
+        let currentSort = "hot";    // hot, score, time
+        let searchKeyword = "";
+        let currentView = "home";
+        let currentFishId = null;    // 详情页正在查看的鱼id
+        
+        // 评分文字映射 1~5
+        const scoreTextMap = { 1: "拉完了", 2: "NPC", 3: "人上人", 4: "顶级", 5: "夯" };
+        
+        // 辅助函数: 获取某条鱼的统计 (评论数&平均分)
+        async function fetchFishStats(fishId) {
+            const { data, error } = await supabase
+                .from('comments')
+                .select('score')
+                .eq('fish_id', fishId);
+            if (error || !data) return { avgScore: 0, totalCount: 0 };
+            const total = data.length;
+            if (total === 0) return { avgScore: 0, totalCount: 0 };
+            const sum = data.reduce((acc, cur) => acc + cur.score, 0);
+            return { avgScore: (sum / total), totalCount: total };
+        }
+        
+        // 获取所有鱼的统计数据（批量并发）
+        async function enrichFishesWithStats(fishes) {
+            const enriched = await Promise.all(fishes.map(async (fish) => {
+                const stats = await fetchFishStats(fish.id);
+                return { ...fish, avgScore: stats.avgScore, commentCount: stats.totalCount };
+            }));
+            return enriched;
+        }
+        
+        // 渲染首页（包含搜索/排序）
+        async function renderHome() {
+            if (!allFishes.length) {
+                document.getElementById('fishGridContainer').innerHTML = '<div class="loading" style="padding:2rem;">🐡 暂无鱼种，快点击“新鱼入库”上传第一只！</div>';
+                return;
+            }
+            // 先获取每一条鱼的实时统计数据（确保热度/评分最新）
+            let fishesWithStats = await enrichFishesWithStats(allFishes);
+            // 搜索过滤
+            let filtered = fishesWithStats.filter(f => f.title.toLowerCase().includes(searchKeyword.toLowerCase()));
+            // 排序
+            if (currentSort === "hot") {
+                filtered.sort((a,b) => (b.commentCount || 0) - (a.commentCount || 0));
+            } else if (currentSort === "score") {
+                filtered.sort((a,b) => (b.avgScore || 0) - (a.avgScore || 0));
+            } else if (currentSort === "time") {
+                filtered.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+            }
+            
+            const grid = document.getElementById('fishGridContainer');
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="padding:2rem; text-align:center;">🐟 没有找到相关鱼儿~</div>';
+                return;
+            }
+            let html = '';
+            for (let fish of filtered) {
+                const avgFixed = fish.avgScore ? fish.avgScore.toFixed(1) : '暂无';
+                const starShow = fish.avgScore ? '⭐ ' + avgFixed : '🐟 待评分';
+                html += `
+                    <div class="fish-card" data-id="${fish.id}">
+                        <img class="fish-card-img" src="${fish.image_url}" alt="${fish.title}" onerror="this.src='https://picsum.photos/id/129/300/180'">
+                        <div class="fish-card-info">
+                            <div class="fish-card-title">🐠 ${escapeHtml(fish.title)}</div>
+                            <div class="fish-card-stats">
+                                <span>${starShow}</span>
+                                <span>💬 ${fish.commentCount || 0} 评</span>
+                            </div>
+                        </div>
+                        <button class="delete-fish-btn" data-id="${fish.id}" data-title="${escapeHtml(fish.title)}">🗑️</button>
+                    </div>
+                `;
+            }
+            grid.innerHTML = html;
+            // 绑定卡片点击跳转详情
+            document.querySelectorAll('.fish-card').forEach(card => {
+                const id = parseInt(card.getAttribute('data-id'));
+                card.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-fish-btn')) return;
+                    showDetailView(id);
+                });
+            });
+            // 绑定删除鱼按钮事件
+            document.querySelectorAll('.delete-fish-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const fishId = parseInt(btn.getAttribute('data-id'));
+                    const title = btn.getAttribute('data-title');
+                    const confirmDel = confirm(`⚠️ 永久删除鱼种“${title}”及其全部评论？\n删除后不可恢复！`);
+                    if (confirmDel) {
+                        await deleteFishAndComments(fishId);
+                        await loadAllFishes();
+                        await renderHome();
+                        if (currentView === 'detail' && currentFishId === fishId) {
+                            document.getElementById('detailView').style.display = 'none';
+                            document.getElementById('homeView').style.display = 'block';
+                            currentView = 'home';
+                        }
+                    }
+                });
+            });
+        }
+        
+        // 删除鱼 + 其所有评论
+        async function deleteFishAndComments(fishId) {
+            // 1. 删除所有相关评论
+            const { error: commentError } = await supabase
+                .from('comments')
+                .delete()
+                .eq('fish_id', fishId);
+            if (commentError) console.warn("删除评论失败", commentError);
+            // 2. 删除鱼记录
+            const { error: fishError } = await supabase
+                .from('fishes')
+                .delete()
+                .eq('id', fishId);
+            if (fishError) alert("删除鱼失败: " + fishError.message);
+            else alert("🗑️ 鱼种已删除");
+        }
+        
+        // 详情视图渲染
+        async function showDetailView(fishId) {
+            currentFishId = fishId;
+            const fish = allFishes.find(f => f.id === fishId);
+            if (!fish) return;
+            // 加载该鱼的评论
+            const { data: commentsData, error } = await supabase
+                .from('comments')
+                .select('*')
+                .eq('fish_id', fishId)
+                .order('created_at', { ascending: false });
+            if (error) console.error(error);
+            const comments = commentsData || [];
+            // 计算当前鱼的平均分
+            let avgScore = 0;
+            if (comments.length) {
+                const totalScore = comments.reduce((a,b) => a + b.score, 0);
+                avgScore = (totalScore / comments.length).toFixed(1);
+            }
+            const scoreText = avgScore ? `${avgScore} 星` : '暂无评分';
+            const html = `
+                <div class="fish-detail-header">
+                    <img class="detail-img" src="${fish.image_url}" onerror="this.src='https://picsum.photos/id/129/300/300'">
+                    <div class="detail-meta">
+                        <h2>🐟 ${escapeHtml(fish.title)}</h2>
+                        <div>⭐ 综合评分: ${scoreText} (${comments.length}人评价)</div>
+                        <div class="rating-stars" id="detailStars"></div>
+                        <div id="selectedRatingText" style="margin:5px 0; font-weight:bold;"></div>
+                        <div class="score-text-badge" id="scoreLevelLabel">待评分</div>
+                    </div>
+                </div>
+                <div class="form-comment" style="background:#f5fafd; padding:1rem; border-radius:1.5rem; margin-bottom:1rem;">
+                    <div><label>🎭 渔友昵称 (可选)</label> <input type="text" id="detailNickname" placeholder="养鱼客" maxlength="30"></div>
+                    <div style="margin-top:8px;"><label>💬 评价心得</label> <textarea id="detailCommentText" rows="2" style="width:100%; border-radius:1rem;"></textarea></div>
+                    <button id="submitDetailComment" style="margin-top:8px;">📤 发表评分+评论</button>
+                </div>
+                <h4>📋 最新渔友评价</h4>
+                <div id="detailCommentsList">
+                    ${renderCommentListHtml(comments)}
+                </div>
+            `;
+            document.getElementById('detailContent').innerHTML = html;
+            // 渲染星星组件
+            let selectedStar = null;
+            function renderStarsDetail(selected) {
+                const starContainer = document.getElementById('detailStars');
+                if (!starContainer) return;
+                starContainer.innerHTML = '';
+                for (let i = 1; i <= 5; i++) {
+                    const starBtn = document.createElement('button');
+                    starBtn.className = 'star';
+                    starBtn.innerHTML = (selected !== null && i <= selected) ? '★' : '☆';
+                    if (selected !== null && i <= selected) starBtn.classList.add('active');
+                    starBtn.onclick = () => {
+                        selectedStar = i;
+                        const textSpan = document.getElementById('selectedRatingText');
+                        textSpan.innerHTML = `🎣 已选: ${i}星 (${scoreTextMap[i]})`;
+                        const levelSpan = document.getElementById('scoreLevelLabel');
+                        levelSpan.innerHTML = `定档: ${scoreTextMap[i]}`;
+                        renderStarsDetail(i);
+                    };
+                    starContainer.appendChild(starBtn);
+                }
+            }
+            renderStarsDetail(null);
+            // 提交评论
+            const submitBtn = document.getElementById('submitDetailComment');
+            const newSubmit = async () => {
+                if (selectedStar === null) { alert("请先点击星星打分 (1~5⭐)"); return; }
+                let content = document.getElementById('detailCommentText').value.trim();
+                if (!content) { alert("请留下你对这条鱼的看法~"); return; }
+                let nick = document.getElementById('detailNickname').value.trim();
+                if (!nick) nick = "养鱼客";
+                const { error: insertErr } = await supabase
+                    .from('comments')
+                    .insert([{
+                        fish_id: fishId,
+                        nick: nick,
+                        score: selectedStar,
+                        content: content
+                    }]);
+                if (insertErr) { alert("评论失败:"+insertErr.message); return; }
+                document.getElementById('detailCommentText').value = '';
+                document.getElementById('detailNickname').value = '';
+                selectedStar = null;
+                renderStarsDetail(null);
+                document.getElementById('selectedRatingText').innerHTML = '';
+                document.getElementById('scoreLevelLabel').innerHTML = '待评分';
+                // 刷新详情视图显示最新评论
+                await refreshDetailAfterComment(fishId);
+            };
+            submitBtn.onclick = newSubmit;
+            // 绑定每个评论的删除按钮 (事件委托)
+            const commentsDiv = document.getElementById('detailCommentsList');
+            if (commentsDiv) {
+                commentsDiv.querySelectorAll('.delete-comment-btn').forEach(btn => {
+                    btn.onclick = async (e) => {
+                        e.stopPropagation();
+                        const commentId = parseInt(btn.getAttribute('data-cid'));
+                        if (confirm("🗑️ 确定删除这条评论吗？删除后不可恢复。")) {
+                            const { error: delErr } = await supabase
+                                .from('comments')
+                                .delete()
+                                .eq('id', commentId);
+                            if (!delErr) {
+                                await refreshDetailAfterComment(fishId);
+                            } else { alert("删除失败"); }
+                        }
+                    };
+                });
+            }
+        }
+        
+        async function refreshDetailAfterComment(fishId) {
+            if (currentFishId === fishId) {
+                await showDetailView(fishId);
+            }
+        }
+        
+        function renderCommentListHtml(comments) {
+            if (!comments.length) return '<div style="padding:1rem;text-align:center;">🐟 暂无评论，来做第一个渔友～</div>';
+            let html = '';
+            for (let c of comments) {
+                const starShow = "★".repeat(c.score) + "☆".repeat(5 - c.score);
+                const time = new Date(c.created_at).toLocaleString();
+                html += `
+                    <div class="comment-item">
+                        <div><strong>🐟 ${escapeHtml(c.nick || '养鱼客')}</strong>  ⭐ ${c.score}/5 ${starShow}  <span style="font-size:0.7rem;">${time}</span></div>
+                        <div style="margin-top:5px;">${escapeHtml(c.content)}</div>
+                        <button class="delete-comment-btn" data-cid="${c.id}">🗑️ 删除</button>
+                    </div>
+                `;
+            }
+            return html;
+        }
+        
+        // 文件上传至 Supabase Storage, 返回公开URL
+        async function uploadFishImage(file, fishTitle) {
+            if (!file) throw new Error("未选择图片");
+            const ext = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${fishTitle.replace(/\s/g, '_')}.${ext}`;
+            const { data, error } = await supabase.storage
+                .from(STORAGE_BUCKET)
+                .upload(fileName, file, { cacheControl: '3600', upsert: false });
+            if (error) throw error;
+            const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
+            return urlData.publicUrl;
+        }
+        
+        // 新增鱼种 (图片上传+写入 fishes)
+        async function addNewFish(title, imageFile) {
+            if (!title || title.trim() === "") throw new Error("鱼名不能为空");
+            let imageUrl = "";
+            if (imageFile) {
+                imageUrl = await uploadFishImage(imageFile, title);
+            } else {
+                throw new Error("请选择图片");
+            }
+            const { error } = await supabase
+                .from('fishes')
+                .insert([{ title: title.trim(), image_url: imageUrl }]);
+            if (error) throw error;
+            return true;
+        }
+        
+        // 加载所有鱼 (原始数据)
+        async function loadAllFishes() {
+            const { data, error } = await supabase
+                .from('fishes')
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (error) { console.error(error); allFishes = []; }
+            else { allFishes = data || []; }
+        }
+        
+        // 界面UI控制
+        function showHome() {
+            currentView = "home";
+            document.getElementById('homeView').style.display = 'block';
+            document.getElementById('detailView').style.display = 'none';
+            renderHome();
+        }
+        function showDetailFromHome(id) {
+            currentView = "detail";
+            document.getElementById('homeView').style.display = 'none';
+            document.getElementById('detailView').style.display = 'block';
+            showDetailView(id);
+        }
+        
+        // ----- 事件绑定 -----
+        document.getElementById('goHomeBtn').onclick = () => { showHome(); };
+        document.getElementById('backHomeBtn').onclick = () => { showHome(); };
+        // 显示新增表单浮层（内联）
+        const addFormDiv = document.getElementById('inlineAddForm');
+        document.getElementById('showAddFormBtn').onclick = () => {
+            if (addFormDiv.style.display === 'none' || addFormDiv.style.display === '') {
+                addFormDiv.style.display = 'flex';
+            } else {
+                addFormDiv.style.display = 'none';
+            }
+        };
+        document.getElementById('cancelAddBtn').onclick = () => { addFormDiv.style.display = 'none'; };
+        document.getElementById('confirmAddFishBtn').onclick = async () => {
+            const titleInput = document.getElementById('newFishTitle');
+            const fileInput = document.getElementById('newFishImage');
+            const title = titleInput.value.trim();
+            const file = fileInput.files[0];
+            if (!title) { alert("请输入鱼名"); return; }
+            if (!file) { alert("请选择一张鱼儿图片"); return; }
+            const uploadBtn = document.getElementById('confirmAddFishBtn');
+            uploadBtn.disabled = true;
+            uploadBtn.innerText = "上传中...";
+            try {
+                await addNewFish(title, file);
+                alert(`✅ 成功添加新鱼: ${title}`);
+                titleInput.value = "";
+                fileInput.value = "";
+                addFormDiv.style.display = 'none';
+                await loadAllFishes();
+                await renderHome();
+                if (currentView === 'home') renderHome();
+            } catch (err) {
+                alert("添加失败: " + err.message);
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.innerText = "✨ 确认上传并入库";
+            }
+        };
+        
+        // 搜索监听
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            searchKeyword = e.target.value;
+            renderHome();
+        });
+        // 排序监听
+        const sortBtns = document.querySelectorAll('.sort-btn');
+        sortBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sortType = btn.getAttribute('data-sort');
+                currentSort = sortType;
+                sortBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderHome();
+            });
+        });
+        // 启动初始化
+        await loadAllFishes();
+        // 默认激活热度排序按钮样式
+        document.querySelector('.sort-btn[data-sort="hot"]').classList.add('active');
+        showHome();
+        
+        // 辅助函数
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+    })();
+</script>
+</body>
+</html>
