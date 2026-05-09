@@ -531,7 +531,7 @@
                 const time = new Date(c.created_at).toLocaleString();
                 commentsHtml += `
                     <div class="comment-item" data-comment-id="${c.id}">
-                        <div><strong>🐟 ${escapeHtml(c.nick || '匿名鱼友')}</strong> ⭐ ${c.score}/5 ${starShow} <span style="font-size:0.7rem;">${time}</span></div>
+                        <div><strong>🐟 ${escapeHtml(c.nick || '匿名鱼友')}</strong> ${starShow} <span style="font-size:0.7rem;">${time}</span></div>
                         <div style="margin-top:5px;">${escapeHtml(c.content)}</div>
                         <button class="delete-comment-btn" data-cid="${c.id}" onclick="event.stopPropagation();">🗑️ 删除</button>
                     </div>
@@ -592,7 +592,6 @@
                     if (selected !== null && i <= selected) star.classList.add('active');
                     star.onclick = () => {
                         selectedStar = i;
-                        document.getElementById('selectedRatingText').innerHTML = `🎣 已选: ${i}星 (${scoreTextMap[i]})`;
                         document.getElementById('scoreLevelLabel').innerHTML = `给到一个 ${scoreTextMap[i]}`;
                         renderStars(i);
                     };
