@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>泡泡鱼图鉴 | 社区</title>
+    <title>泡泡鱼图鉴 | 社区养鱼评分站</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -41,7 +41,7 @@
             transition: opacity 0.2s;
         }
         .logo h1:hover { opacity: 0.8; }
-        .nav-buttons { display: flex; gap: 1rem; }
+        .nav-buttons { display: flex; gap: 1rem; align-items: center; }
         .nav-btn { 
             background: #2b9fc2; 
             border: none; 
@@ -57,11 +57,18 @@
         .nav-btn:hover { background: #f59e0b; transform: translateY(-2px); }
         .nav-btn.active { background: #f59e0b; }
         .add-fish-btn { background: #2c6e3c; }
+        .refresh-btn {
+            background: #5f9ea0;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+        .refresh-btn:hover { background: #f59e0b; }
         .toolbar {
             display: flex;
             flex-wrap: wrap;
             gap: 1rem;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 1.8rem;
             background: #f4fbfecc;
             padding: 0.8rem 1.2rem;
@@ -121,6 +128,22 @@
         .add-fish-form input { flex: 2; padding: 0.7rem; border-radius: 2rem; border: 1px solid #ffe0a3; }
         .add-fish-form button { background: #2b9fc2; padding: 0.6rem 1.5rem; border-radius: 2rem; }
         .back-btn { background: #365f77; margin-bottom: 1rem; }
+        
+        /* 详情页头部区域：标题和刷新按钮同行 */
+        .detail-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .detail-refresh-btn {
+            background: #5f9ea0;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+        }
+        
         .fish-detail-header {
             display: flex;
             flex-wrap: wrap;
@@ -222,6 +245,24 @@
             box-shadow: 0 8px 16px rgba(0,0,0,0.15);
         }
         
+        /* 评论列表头部（标题+刷新） */
+        .comments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0 0.6rem 0;
+            flex-wrap: wrap;
+        }
+        .comments-header h4 {
+            margin: 0;
+        }
+        .comments-refresh-btn {
+            background: #5f9ea0;
+            padding: 0.3rem 0.9rem;
+            font-size: 0.75rem;
+            border-radius: 2rem;
+        }
+        
         .comment-item {
             background: white;
             border-radius: 1.2rem;
@@ -261,7 +302,6 @@
             <h1>🐟 泡泡鱼图鉴 · 鱼友社区</h1>
         </div>
         <div class="nav-buttons">
-            <!-- 首页按钮：跳转到指定链接 -->
             <a href="https://kevinming3671-sys.github.io/fish_intro/index.html" class="nav-btn" target="_blank" id="homeNavBtn">🏠 首页</a>
             <button class="nav-btn add-fish-btn" id="showAddFormBtn">➕ 新鱼发布</button>
         </div>
@@ -272,11 +312,14 @@
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="🔍 搜鱼名 / 标题...">
             </div>
-            <div class="sort-box">
-                <span>排序：</span>
-                <button class="sort-btn" data-sort="hot">🔥 热度</button>
-                <button class="sort-btn" data-sort="score">⭐ 平均分</button>
-                <button class="sort-btn" data-sort="time">🕒 最新</button>
+            <div style="display: flex; gap: 0.8rem; align-items: center;">
+                <button id="homeRefreshBtn" class="nav-btn refresh-btn" style="background:#5f9ea0;">🔄 刷新列表</button>
+                <div class="sort-box">
+                    <span>排序：</span>
+                    <button class="sort-btn" data-sort="hot">🔥 热度</button>
+                    <button class="sort-btn" data-sort="score">⭐ 平均分</button>
+                    <button class="sort-btn" data-sort="time">🕒 最新</button>
+                </div>
             </div>
         </div>
         <div id="inlineAddForm" style="display: none;" class="add-fish-form">
@@ -289,10 +332,13 @@
     </div>
 
     <div id="detailView" style="display: none;">
-        <button class="nav-btn back-btn" id="backHomeBtn">← 返回列表</button>
+        <div class="detail-header-row">
+            <button class="nav-btn back-btn" id="backHomeBtn">← 返回列表</button>
+            <button id="detailPageRefreshBtn" class="nav-btn refresh-btn detail-refresh-btn">🔄 刷新本页</button>
+        </div>
         <div id="detailContent"></div>
     </div>
-    <footer>🐠 评价实时同步 · 可匿名发布</footer>
+    <footer>🐠 评价实时同步 · 可匿名发布 · 点击刷新按钮获取最新数据</footer>
 </div>
 
 <script>
@@ -309,12 +355,10 @@
         const STORAGE_DEVICE_ID_KEY = "fish_forum_device_id";
         const STORAGE_NICKNAME_KEY = "fish_forum_device_nickname";
         
-        // 生成随机短ID (6位)
         function generateShortId() {
             return Math.random().toString(36).substring(2, 8);
         }
         
-        // 获取或生成本设备唯一昵称 (例如“渔友_a3f2k9”)
         function getDeviceNickname() {
             let deviceId = localStorage.getItem(STORAGE_DEVICE_ID_KEY);
             let nickname = localStorage.getItem(STORAGE_NICKNAME_KEY);
@@ -329,9 +373,7 @@
             return nickname;
         }
         
-        // 获取当前设备的默认昵称（非匿名时使用）
         let deviceDefaultNick = getDeviceNickname();
-        
         let allFishes = [];
         let currentSort = "hot";
         let searchKeyword = "";
@@ -348,15 +390,11 @@
             });
         }
         
-        // 修复后的 safeFileName 函数（纯英文数字 + 时间戳 + 随机哈希）
+        // 纯英文/数字文件名
         function safeFileName(originalName, fishTitle) {
-            // 获取文件扩展名（小写）
             const ext = originalName.split('.').pop().toLowerCase();
-            // 时间戳毫秒
             const timestamp = Date.now();
-            // 随机8位哈希（字母数字混合）
             const randomHash = Math.random().toString(36).substring(2, 10);
-            // 纯英文/数字文件名，完全不依赖中文鱼名
             return `fish_${timestamp}_${randomHash}.${ext}`;
         }
         
@@ -380,7 +418,6 @@
             return enriched;
         }
         
-        // 进入详情页
         window.goToDetail = function(fishId) {
             console.log("进入详情页，鱼ID:", fishId);
             currentFishId = fishId;
@@ -389,6 +426,12 @@
             document.getElementById('detailView').style.display = 'block';
             showDetailView(fishId);
         };
+        
+        // 加载鱼类数据（刷新列表用）
+        async function refreshFishList() {
+            await loadAllFishes();
+            await renderHome();
+        }
         
         async function renderHome() {
             if (!allFishes.length) {
@@ -444,13 +487,19 @@
             if (confirm(`⚠️ 永久删除鱼“${title}”及其全部评论？`)) {
                 await supabase.from('comments').delete().eq('fish_id', fishId);
                 await supabase.from('fishes').delete().eq('id', fishId);
-                await loadAllFishes();
-                await renderHome();
+                await refreshFishList();
                 if (currentView === 'detail' && currentFishId === fishId) {
                     document.getElementById('detailView').style.display = 'none';
                     document.getElementById('homeView').style.display = 'block';
                     currentView = 'home';
                 }
+            }
+        }
+        
+        // 刷新详情页（保留当前鱼ID）
+        async function refreshDetailView() {
+            if (currentFishId) {
+                await showDetailView(currentFishId);
             }
         }
         
@@ -490,7 +539,6 @@
             }
             if (commentsList.length === 0) commentsHtml = '<div class="loading">🐟 暂无评论，来做第一个鱼友～</div>';
             
-            // 构建详情页结构，包含匿名复选框
             const html = `
                 <div class="fish-detail-header">
                     <img class="detail-img" src="${fish.image_url}" onerror="this.src='https://picsum.photos/id/129/300/300'">
@@ -523,7 +571,10 @@
                     <button id="submitDetailComment" class="submit-comment-btn">📤 发表评分 + 评论</button>
                 </div>
                 
-                <h4 style="margin: 1rem 0 0.6rem 0;">📋 最新鱼友评价</h4>
+                <div class="comments-header">
+                    <h4>📋 最新鱼友评价</h4>
+                    <button id="commentsRefreshBtn" class="nav-btn comments-refresh-btn">🔄 刷新评论</button>
+                </div>
                 <div id="detailCommentsList">${commentsHtml}</div>
             `;
             document.getElementById('detailContent').innerHTML = html;
@@ -550,7 +601,6 @@
             }
             renderStars(null);
             
-            // 监听昵称变化，如果用户手动修改则保存到 localStorage 作为新默认昵称
             const nicknameInput = document.getElementById('detailNickname');
             nicknameInput.addEventListener('change', function() {
                 const newNick = this.value.trim();
@@ -560,7 +610,7 @@
                 }
             });
             
-            // 提交评论 (支持匿名)
+            // 提交评论
             document.getElementById('submitDetailComment').onclick = async () => {
                 if (selectedStar === null) { 
                     alert("🐟 请先点击星星为该鱼打分！"); 
@@ -572,15 +622,11 @@
                     return; 
                 }
                 
-                // 获取匿名选项
                 const isAnonymous = document.getElementById('anonymousCheckbox').checked;
                 let finalNick = nicknameInput.value.trim();
                 if (!finalNick) finalNick = "热心鱼友";
-                
-                // 如果勾选匿名，则发布昵称强制为 "匿名渔友"，但设备默认昵称保留不变
                 let displayNick = isAnonymous ? "匿名鱼友" : finalNick;
                 
-                // 确保设备默认昵称存回 localStorage (如果用户修改并取消匿名后)
                 if (!isAnonymous && finalNick !== deviceDefaultNick) {
                     deviceDefaultNick = finalNick;
                     localStorage.setItem(STORAGE_NICKNAME_KEY, finalNick);
@@ -599,17 +645,15 @@
                     return; 
                 }
                 
-                // 清空输入框和选择状态，保留匿名勾选框和昵称不变
                 document.getElementById('detailCommentText').value = '';
                 selectedStar = null;
                 renderStars(null);
                 document.getElementById('selectedRatingText').innerHTML = '';
                 document.getElementById('scoreLevelLabel').innerHTML = '待评分';
-                // 匿名勾选框不重置，保留用户习惯，但不清空昵称输入
                 await showDetailView(fishId);
             };
             
-            // 删除评论事件
+            // 评论删除事件
             document.querySelectorAll('.delete-comment-btn').forEach(btn => {
                 btn.onclick = async (e) => {
                     e.stopPropagation();
@@ -620,6 +664,14 @@
                     }
                 };
             });
+            
+            // 单独刷新评论按钮
+            const commentsRefreshBtn = document.getElementById('commentsRefreshBtn');
+            if (commentsRefreshBtn) {
+                commentsRefreshBtn.onclick = async () => {
+                    await showDetailView(fishId);
+                };
+            }
         }
         
         async function uploadFishImage(file, fishTitle) {
@@ -657,10 +709,11 @@
             currentView = "home";
             document.getElementById('homeView').style.display = 'block';
             document.getElementById('detailView').style.display = 'none';
-            renderHome();
+            // 回到首页时自动刷新列表
+            refreshFishList();
         }
         
-        // 首页按钮改为外部链接，Logo也可以点击跳转
+        // 外部跳转
         const externalHomeUrl = "https://kevinming3671-sys.github.io/fish_intro/index.html";
         const homeNavBtn = document.getElementById('homeNavBtn');
         if (homeNavBtn) {
@@ -676,6 +729,14 @@
         }
         
         document.getElementById('backHomeBtn').onclick = showHome;
+        // 详情页刷新按钮
+        document.getElementById('detailPageRefreshBtn').onclick = () => {
+            if (currentFishId) refreshDetailView();
+        };
+        // 首页手动刷新按钮
+        document.getElementById('homeRefreshBtn').onclick = () => {
+            refreshFishList();
+        };
         
         const addFormDiv = document.getElementById('inlineAddForm');
         document.getElementById('showAddFormBtn').onclick = () => {
@@ -697,8 +758,7 @@
                 document.getElementById('newFishTitle').value = '';
                 document.getElementById('newFishImage').value = '';
                 addFormDiv.style.display = 'none';
-                await loadAllFishes();
-                await renderHome();
+                await refreshFishList();
             } catch (err) {
                 alert("添加失败: " + err.message);
             } finally {
