@@ -112,8 +112,18 @@
             cursor: pointer;
             pointer-events: auto;
             z-index: 10;
+            transition: 0.2s;
         }
         .delete-fish-btn:hover { background: #e2583e; }
+        .delete-fish-btn.disabled {
+            background: #aaa;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .delete-fish-btn.disabled:hover {
+            background: #aaa;
+            transform: none;
+        }
         .add-fish-form {
             background: #fefce8;
             border-radius: 1.8rem;
@@ -129,7 +139,6 @@
         .add-fish-form button { background: #2b9fc2; padding: 0.6rem 1.5rem; border-radius: 2rem; }
         .back-btn { background: #365f77; margin-bottom: 1rem; }
         
-        /* 详情页头部区域：标题和刷新按钮同行 */
         .detail-header-row {
             display: flex;
             justify-content: space-between;
@@ -161,7 +170,6 @@
         .star:hover { transform: scale(1.1); }
         .score-text-badge { background: #243b44; display: inline-block; padding: 0.2rem 0.8rem; border-radius: 30px; color: white; font-size: 0.75rem; }
         
-        /* 评论表单区域优化 */
         .comment-form-container {
             background: linear-gradient(135deg, #f0f9ff, #e6f4fa);
             padding: 1.5rem;
@@ -221,7 +229,6 @@
             border-radius: 30px;
         }
         
-        /* 大号蓝色居中按钮 */
         .submit-comment-btn {
             background: #2b9fc2;
             color: white;
@@ -245,7 +252,6 @@
             box-shadow: 0 8px 16px rgba(0,0,0,0.15);
         }
         
-        /* 评论列表头部（标题+刷新） */
         .comments-header {
             display: flex;
             justify-content: space-between;
@@ -338,7 +344,7 @@
         </div>
         <div id="detailContent"></div>
     </div>
-    <footer>🐠 评价实时同步 · 可匿名发布 · 点击刷新按钮获取最新数据</footer>
+    <footer>🐠 评价实时同步 · 可匿名发布 · 只有无评论的鱼才能被删除 · 只能删除自己的评论</footer>
 </div>
 
 <script>
@@ -351,12 +357,22 @@
         
         const scoreTextMap = { 1: "拉完了", 2: "NPC", 3: "人上人", 4: "顶级", 5: "夯" };
         
-        // ================== 设备唯一昵称管理 ==================
+        // ================== 设备唯一标识管理 ==================
         const STORAGE_DEVICE_ID_KEY = "fish_forum_device_id";
         const STORAGE_NICKNAME_KEY = "fish_forum_device_nickname";
+        const STORAGE_DEVICE_UUID_KEY = "fish_forum_device_uuid";
         
         function generateShortId() {
             return Math.random().toString(36).substring(2, 8);
+        }
+        
+        function getDeviceUUID() {
+            let uuid = localStorage.getItem(STORAGE_DEVICE_UUID_KEY);
+            if (!uuid) {
+                uuid = 'device_' + Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+                localStorage.setItem(STORAGE_DEVICE_UUID_KEY, uuid);
+            }
+            return uuid;
         }
         
         function getDeviceNickname() {
@@ -373,9 +389,11 @@
             return nickname;
         }
         
+        const deviceUUID = getDeviceUUID();
         let deviceDefaultNick = getDeviceNickname();
         let allFishes = [];
         let currentSort = "hot";
+        let sortOrder = { hot: 'desc', score: 'desc', time: 'desc' };
         let searchKeyword = "";
         let currentView = "home";
         let currentFishId = null;
@@ -390,7 +408,6 @@
             });
         }
         
-        // 纯英文/数字文件名
         function safeFileName(originalName, fishTitle) {
             const ext = originalName.split('.').pop().toLowerCase();
             const timestamp = Date.now();
@@ -407,7 +424,8 @@
             const total = data.length;
             if (total === 0) return { avgScore: 0, totalCount: 0 };
             const sum = data.reduce((acc, cur) => acc + cur.score, 0);
-            return { avgScore: (sum / total), totalCount: total };
+            const avg = sum / total;
+            return { avgScore: Math.round(avg * 10) / 10, totalCount: total };
         }
         
         async function enrichFishesWithStats(fishes) {
@@ -427,10 +445,21 @@
             showDetailView(fishId);
         };
         
-        // 加载鱼类数据（刷新列表用）
         async function refreshFishList() {
             await loadAllFishes();
             await renderHome();
+        }
+        
+        function applySorting(list, sortType, order) {
+            const multiplier = order === 'asc' ? 1 : -1;
+            if (sortType === "hot") {
+                return [...list].sort((a,b) => ((a.commentCount || 0) - (b.commentCount || 0)) * multiplier);
+            } else if (sortType === "score") {
+                return [...list].sort((a,b) => ((a.avgScore || 0) - (b.avgScore || 0)) * multiplier);
+            } else if (sortType === "time") {
+                return [...list].sort((a,b) => (new Date(a.created_at) - new Date(b.created_at)) * multiplier);
+            }
+            return list;
         }
         
         async function renderHome() {
@@ -440,14 +469,7 @@
             }
             let fishesWithStats = await enrichFishesWithStats(allFishes);
             let filtered = fishesWithStats.filter(f => f.title.toLowerCase().includes(searchKeyword.toLowerCase()));
-            
-            if (currentSort === "hot") {
-                filtered.sort((a,b) => (b.commentCount || 0) - (a.commentCount || 0));
-            } else if (currentSort === "score") {
-                filtered.sort((a,b) => (b.avgScore || 0) - (a.avgScore || 0));
-            } else if (currentSort === "time") {
-                filtered.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-            }
+            filtered = applySorting(filtered, currentSort, sortOrder[currentSort]);
             
             const grid = document.getElementById('fishGridContainer');
             if (filtered.length === 0) {
@@ -456,8 +478,13 @@
             }
             let html = '';
             for (let fish of filtered) {
-                const avgFixed = fish.avgScore ? fish.avgScore.toFixed(1) : '暂无';
-                const starShow = fish.avgScore ? '⭐ ' + avgFixed : '🐟 待评分';
+                const avgDisplay = fish.avgScore ? fish.avgScore.toFixed(1) : '暂无';
+                const starShow = fish.avgScore ? '⭐ ' + avgDisplay : '🐟 待评分';
+                const commentCount = fish.commentCount || 0;
+                // 关键修复：根据评论数决定删除按钮是否可用
+                const canDelete = commentCount === 0;
+                const deleteBtnClass = canDelete ? 'delete-fish-btn' : 'delete-fish-btn disabled';
+                const deleteBtnTitle = canDelete ? '删除此鱼' : `有 ${commentCount} 条评论，不可删除`;
                 html += `
                     <div class="fish-card" data-id="${fish.id}" onclick="goToDetail(${fish.id})">
                         <img class="fish-card-img" src="${fish.image_url}" alt="${escapeHtml(fish.title)}" onerror="this.src='https://picsum.photos/id/129/300/180'">
@@ -465,16 +492,17 @@
                             <div class="fish-card-title">🐠 ${escapeHtml(fish.title)}</div>
                             <div class="fish-card-stats">
                                 <span>${starShow}</span>
-                                <span>💬 ${fish.commentCount || 0} 评</span>
+                                <span>💬 ${commentCount} 评</span>
                             </div>
                         </div>
-                        <button class="delete-fish-btn" data-id="${fish.id}" data-title="${escapeHtml(fish.title)}" onclick="event.stopPropagation();">🗑️</button>
+                        <button class="${deleteBtnClass}" data-id="${fish.id}" data-title="${escapeHtml(fish.title)}" data-comment-count="${commentCount}" title="${deleteBtnTitle}" ${!canDelete ? 'disabled' : ''} onclick="event.stopPropagation();">🗑️</button>
                     </div>
                 `;
             }
             grid.innerHTML = html;
             
-            document.querySelectorAll('.delete-fish-btn').forEach(btn => {
+            // 只为可删除的按钮绑定事件（不可删除的按钮已禁用，无需绑定）
+            document.querySelectorAll('.delete-fish-btn:not(.disabled)').forEach(btn => {
                 btn.removeEventListener('click', handleDeleteFish);
                 btn.addEventListener('click', handleDeleteFish);
             });
@@ -484,8 +512,15 @@
             e.stopPropagation();
             const fishId = parseInt(this.getAttribute('data-id'));
             const title = this.getAttribute('data-title');
-            if (confirm(`⚠️ 永久删除鱼“${title}”及其全部评论？`)) {
-                await supabase.from('comments').delete().eq('fish_id', fishId);
+            const commentCount = parseInt(this.getAttribute('data-comment-count'));
+            
+            // 二次确认：如果评论数 > 0，不允许删除
+            if (commentCount > 0) {
+                alert(`❌ 无法删除“${title}”：该鱼已有 ${commentCount} 条评论。\n只有无评论的鱼才可被删除，以保护其他鱼友的评价。`);
+                return;
+            }
+            
+            if (confirm(`⚠️ 确定永久删除鱼“${title}”吗？\n（该鱼暂无评论，可安全删除）`)) {
                 await supabase.from('fishes').delete().eq('id', fishId);
                 await refreshFishList();
                 if (currentView === 'detail' && currentFishId === fishId) {
@@ -496,7 +531,6 @@
             }
         }
         
-        // 刷新详情页（保留当前鱼ID）
         async function refreshDetailView() {
             if (currentFishId) {
                 await showDetailView(currentFishId);
@@ -522,18 +556,20 @@
             let avgScore = 0;
             if (commentsList.length) {
                 const totalScore = commentsList.reduce((a,b) => a + b.score, 0);
-                avgScore = (totalScore / commentsList.length).toFixed(1);
+                avgScore = Math.round((totalScore / commentsList.length) * 10) / 10;
             }
             
             let commentsHtml = '';
             for (let c of commentsList) {
                 const starShow = "★".repeat(c.score) + "☆".repeat(5 - c.score);
                 const time = new Date(c.created_at).toLocaleString();
+                const isOwner = c.device_uuid === deviceUUID;
+                const deleteButton = isOwner ? `<button class="delete-comment-btn" data-cid="${c.id}" onclick="event.stopPropagation();">🗑️ 删除</button>` : '';
                 commentsHtml += `
                     <div class="comment-item" data-comment-id="${c.id}">
                         <div><strong>🐟 ${escapeHtml(c.nick || '匿名鱼友')}</strong> ${starShow} <span style="font-size:0.7rem;">${time}</span></div>
                         <div style="margin-top:5px;">${escapeHtml(c.content)}</div>
-                        <button class="delete-comment-btn" data-cid="${c.id}" onclick="event.stopPropagation();">🗑️ 删除</button>
+                        ${deleteButton}
                     </div>
                 `;
             }
@@ -579,7 +615,6 @@
             `;
             document.getElementById('detailContent').innerHTML = html;
             
-            // 星星组件逻辑
             let selectedStar = null;
             const starContainer = document.getElementById('detailStars');
             function renderStars(selected) {
@@ -609,7 +644,6 @@
                 }
             });
             
-            // 提交评论
             document.getElementById('submitDetailComment').onclick = async () => {
                 if (selectedStar === null) { 
                     alert("🐟 请先点击星星为该鱼打分！"); 
@@ -637,7 +671,8 @@
                         fish_id: fishId,
                         nick: displayNick,
                         score: selectedStar,
-                        content: content
+                        content: content,
+                        device_uuid: deviceUUID
                     }]);
                 if (insertErr) { 
                     alert("评论失败: " + insertErr.message); 
@@ -652,19 +687,30 @@
                 await showDetailView(fishId);
             };
             
-            // 评论删除事件
             document.querySelectorAll('.delete-comment-btn').forEach(btn => {
                 btn.onclick = async (e) => {
                     e.stopPropagation();
                     const commentId = parseInt(btn.getAttribute('data-cid'));
-                    if (confirm("🗑️ 确定删除这条评论吗？")) {
+                    if (confirm("🗑️ 确定删除这条评论吗？只有你自己发表的评论可以删除。")) {
+                        const { data: commentData, error: fetchErr } = await supabase
+                            .from('comments')
+                            .select('device_uuid')
+                            .eq('id', commentId)
+                            .single();
+                        if (fetchErr || !commentData) {
+                            alert("无法验证评论归属");
+                            return;
+                        }
+                        if (commentData.device_uuid !== deviceUUID) {
+                            alert("❌ 无权删除他人的评论！");
+                            return;
+                        }
                         await supabase.from('comments').delete().eq('id', commentId);
                         await showDetailView(fishId);
                     }
                 };
             });
             
-            // 单独刷新评论按钮
             const commentsRefreshBtn = document.getElementById('commentsRefreshBtn');
             if (commentsRefreshBtn) {
                 commentsRefreshBtn.onclick = async () => {
@@ -708,11 +754,9 @@
             currentView = "home";
             document.getElementById('homeView').style.display = 'block';
             document.getElementById('detailView').style.display = 'none';
-            // 回到首页时自动刷新列表
             refreshFishList();
         }
         
-        // 外部跳转
         const externalHomeUrl = "https://kevinming3671-sys.github.io/fish_intro/index.html";
         const homeNavBtn = document.getElementById('homeNavBtn');
         if (homeNavBtn) {
@@ -728,11 +772,9 @@
         }
         
         document.getElementById('backHomeBtn').onclick = showHome;
-        // 详情页刷新按钮
         document.getElementById('detailPageRefreshBtn').onclick = () => {
             if (currentFishId) refreshDetailView();
         };
-        // 首页手动刷新按钮
         document.getElementById('homeRefreshBtn').onclick = () => {
             refreshFishList();
         };
@@ -773,9 +815,18 @@
         
         document.querySelectorAll('.sort-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                currentSort = btn.getAttribute('data-sort');
+                const newSortType = btn.getAttribute('data-sort');
+                if (currentSort === newSortType) {
+                    sortOrder[newSortType] = sortOrder[newSortType] === 'desc' ? 'asc' : 'desc';
+                } else {
+                    currentSort = newSortType;
+                    sortOrder[newSortType] = 'desc';
+                }
+                currentSort = newSortType;
                 document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+                const orderText = sortOrder[currentSort] === 'desc' ? '▼ 降序' : '▲ 升序';
+                btn.title = orderText;
                 renderHome();
             });
         });
