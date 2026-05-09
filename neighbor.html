@@ -66,8 +66,8 @@
             position: relative;
         }
         .fish-card:hover { transform: translateY(-6px); }
-        .fish-card-img { width: 100%; height: 180px; object-fit: cover; background: #d9eef5; }
-        .fish-card-info { padding: 1rem; }
+        .fish-card-img { width: 100%; height: 180px; object-fit: cover; background: #d9eef5; pointer-events: none; }
+        .fish-card-info { padding: 1rem; pointer-events: none; }
         .fish-card-title { font-weight: 800; font-size: 1.2rem; }
         .fish-card-stats { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.8rem; color: #2c6f8c; }
         .delete-fish-btn {
@@ -82,6 +82,8 @@
             height: 32px;
             font-size: 1.2rem;
             cursor: pointer;
+            pointer-events: auto;
+            z-index: 10;
         }
         .delete-fish-btn:hover { background: #e2583e; }
         .add-fish-form {
@@ -152,7 +154,6 @@
     <div id="homeView">
         <div class="toolbar">
             <div class="search-box">
-                <label for="searchInput" style="display:none;">搜索</label>
                 <input type="text" id="searchInput" placeholder="🔍 搜鱼名 / 标题...">
             </div>
             <div class="sort-box">
@@ -163,7 +164,7 @@
             </div>
         </div>
         <div id="inlineAddForm" style="display: none;" class="add-fish-form">
-            <input type="text" id="newFishTitle" placeholder="鱼种名称 (例如 梦幻荧光鱼)" maxlength="40">
+            <input type="text" id="newFishTitle" placeholder="鱼种名称" maxlength="40">
             <input type="file" id="newFishImage" accept="image/jpeg,image/png,image/webp">
             <button id="confirmAddFishBtn">✨ 确认上传并入库</button>
             <button id="cancelAddBtn" style="background:#aaa;">取消</button>
@@ -175,7 +176,7 @@
         <button class="nav-btn back-btn" id="backHomeBtn">← 返回鱼塘</button>
         <div id="detailContent"></div>
     </div>
-    <footer>🐠 所有评价实时同步 · 可删鱼/删评(需确认) · 图片直传Supabase</footer>
+    <footer>🐠 所有评价实时同步 · 可删鱼/删评(需确认)</footer>
 </div>
 
 <script>
@@ -231,7 +232,18 @@
             return enriched;
         }
         
+        // 核心修复：进入详情页的函数
+        window.goToDetail = function(fishId) {
+            console.log("进入详情页，鱼ID:", fishId);
+            currentFishId = fishId;
+            currentView = "detail";
+            document.getElementById('homeView').style.display = 'none';
+            document.getElementById('detailView').style.display = 'block';
+            showDetailView(fishId);
+        };
+        
         async function renderHome() {
+            console.log("渲染首页，鱼类数量:", allFishes.length);
             if (!allFishes.length) {
                 document.getElementById('fishGridContainer').innerHTML = '<div class="loading">🐡 暂无鱼种，快点击“新鱼入库”上传第一只！</div>';
                 return;
@@ -257,7 +269,7 @@
                 const avgFixed = fish.avgScore ? fish.avgScore.toFixed(1) : '暂无';
                 const starShow = fish.avgScore ? '⭐ ' + avgFixed : '🐟 待评分';
                 html += `
-                    <div class="fish-card" data-id="${fish.id}">
+                    <div class="fish-card" data-id="${fish.id}" onclick="goToDetail(${fish.id})">
                         <img class="fish-card-img" src="${fish.image_url}" alt="${escapeHtml(fish.title)}" onerror="this.src='https://picsum.photos/id/129/300/180'">
                         <div class="fish-card-info">
                             <div class="fish-card-title">🐠 ${escapeHtml(fish.title)}</div>
@@ -266,44 +278,45 @@
                                 <span>💬 ${fish.commentCount || 0} 评</span>
                             </div>
                         </div>
-                        <button class="delete-fish-btn" data-id="${fish.id}" data-title="${escapeHtml(fish.title)}">🗑️</button>
+                        <button class="delete-fish-btn" data-id="${fish.id}" data-title="${escapeHtml(fish.title)}" onclick="event.stopPropagation();">🗑️</button>
                     </div>
                 `;
             }
             grid.innerHTML = html;
             
-            document.querySelectorAll('.fish-card').forEach(card => {
-                const id = parseInt(card.getAttribute('data-id'));
-                card.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('delete-fish-btn')) return;
-                    showDetailView(id);
-                });
-            });
-            
+            // 绑定删除按钮事件（使用事件委托或者单独绑定）
             document.querySelectorAll('.delete-fish-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    const fishId = parseInt(btn.getAttribute('data-id'));
-                    const title = btn.getAttribute('data-title');
-                    if (confirm(`⚠️ 永久删除鱼种“${title}”及其全部评论？`)) {
-                        await supabase.from('comments').delete().eq('fish_id', fishId);
-                        await supabase.from('fishes').delete().eq('id', fishId);
-                        await loadAllFishes();
-                        await renderHome();
-                        if (currentView === 'detail' && currentFishId === fishId) {
-                            document.getElementById('detailView').style.display = 'none';
-                            document.getElementById('homeView').style.display = 'block';
-                            currentView = 'home';
-                        }
-                    }
-                });
+                btn.removeEventListener('click', handleDeleteFish);
+                btn.addEventListener('click', handleDeleteFish);
             });
         }
         
+        async function handleDeleteFish(e) {
+            e.stopPropagation();
+            const fishId = parseInt(this.getAttribute('data-id'));
+            const title = this.getAttribute('data-title');
+            if (confirm(`⚠️ 永久删除鱼种“${title}”及其全部评论？`)) {
+                await supabase.from('comments').delete().eq('fish_id', fishId);
+                await supabase.from('fishes').delete().eq('id', fishId);
+                await loadAllFishes();
+                await renderHome();
+                if (currentView === 'detail' && currentFishId === fishId) {
+                    document.getElementById('detailView').style.display = 'none';
+                    document.getElementById('homeView').style.display = 'block';
+                    currentView = 'home';
+                }
+            }
+        }
+        
         async function showDetailView(fishId) {
-            currentFishId = fishId;
+            console.log("显示详情页，获取鱼数据...");
             const fish = allFishes.find(f => f.id === fishId);
-            if (!fish) { alert("找不到该鱼"); return; }
+            if (!fish) { 
+                console.error("找不到鱼:", fishId);
+                alert("找不到该鱼数据");
+                showHome();
+                return; 
+            }
             
             const { data: comments, error } = await supabase
                 .from('comments')
@@ -324,10 +337,10 @@
                 const starShow = "★".repeat(c.score) + "☆".repeat(5 - c.score);
                 const time = new Date(c.created_at).toLocaleString();
                 commentsHtml += `
-                    <div class="comment-item">
+                    <div class="comment-item" data-comment-id="${c.id}">
                         <div><strong>🐟 ${escapeHtml(c.nick || '养鱼客')}</strong> ⭐ ${c.score}/5 ${starShow} <span style="font-size:0.7rem;">${time}</span></div>
                         <div style="margin-top:5px;">${escapeHtml(c.content)}</div>
-                        <button class="delete-comment-btn" data-cid="${c.id}">🗑️ 删除</button>
+                        <button class="delete-comment-btn" data-cid="${c.id}" onclick="event.stopPropagation();">🗑️ 删除</button>
                     </div>
                 `;
             }
@@ -345,9 +358,9 @@
                     </div>
                 </div>
                 <div style="background:#f5fafd; padding:1rem; border-radius:1.5rem; margin-bottom:1rem;">
-                    <label for="detailNickname">🎭 渔友昵称 (可选)</label>
+                    <div>🎭 渔友昵称 (可选)</div>
                     <input type="text" id="detailNickname" placeholder="养鱼客" maxlength="30" style="width:100%; margin:5px 0; padding:8px; border-radius:1.5rem; border:1px solid #ccc;">
-                    <label for="detailCommentText">💬 评价心得</label>
+                    <div>💬 评价心得</div>
                     <textarea id="detailCommentText" rows="2" style="width:100%; border-radius:1rem; padding:8px;"></textarea>
                     <button id="submitDetailComment" style="margin-top:8px;">📤 发表评分+评论</button>
                 </div>
@@ -356,9 +369,11 @@
             `;
             document.getElementById('detailContent').innerHTML = html;
             
+            // 星星组件
             let selectedStar = null;
             const starContainer = document.getElementById('detailStars');
             function renderStars(selected) {
+                if (!starContainer) return;
                 starContainer.innerHTML = '';
                 for (let i = 1; i <= 5; i++) {
                     const star = document.createElement('button');
@@ -391,6 +406,7 @@
                 await showDetailView(fishId);
             };
             
+            // 绑定删除评论事件
             document.querySelectorAll('.delete-comment-btn').forEach(btn => {
                 btn.onclick = async (e) => {
                     e.stopPropagation();
@@ -425,8 +441,13 @@
         
         async function loadAllFishes() {
             const { data, error } = await supabase.from('fishes').select('*').order('created_at', { ascending: false });
-            if (error) { console.error(error); allFishes = []; }
-            else { allFishes = data || []; }
+            if (error) { 
+                console.error(error); 
+                allFishes = [];
+            } else { 
+                allFishes = data || []; 
+                console.log("加载到鱼类:", allFishes.length);
+            }
         }
         
         function showHome() {
