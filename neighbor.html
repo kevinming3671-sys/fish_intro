@@ -19,7 +19,6 @@
             color: #02457a;
         }
 
-        /* 主容器 + 视图切换 */
         .app-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -31,7 +30,6 @@
             transition: all 0.2s;
         }
 
-        /* 头部导航 */
         .nav-header {
             display: flex;
             justify-content: space-between;
@@ -66,14 +64,10 @@
             background: #f59e0b;
             box-shadow: 0 0 0 2px #fff3e0;
         }
-        .nav-btn.danger {
-            background: #dc7a4c;
-        }
         .add-fish-btn {
             background: #2c6e3c;
         }
 
-        /* 首页工具栏 */
         .toolbar {
             display: flex;
             flex-wrap: wrap;
@@ -109,7 +103,6 @@
             color: white;
         }
 
-        /* 卡片网格 */
         .fish-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -166,7 +159,6 @@
             background: #e2583e;
         }
 
-        /* 表单新增区域 */
         .add-fish-form {
             background: #fefce8;
             border-radius: 1.8rem;
@@ -190,7 +182,6 @@
             border-radius: 2rem;
         }
 
-        /* 详情页 (鱼评区) */
         .detail-section {
             animation: fadeIn 0.2s;
         }
@@ -271,6 +262,11 @@
             margin-top: 1.5rem;
             font-size: 0.7rem;
         }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #2c6f92;
+        }
         @media (max-width: 680px) {
             .app-container { padding: 1rem; }
             .toolbar { flex-direction: column; }
@@ -288,7 +284,6 @@
         </div>
     </div>
 
-    <!-- 首页视图 -->
     <div id="homeView">
         <div class="toolbar">
             <div class="search-box">
@@ -301,7 +296,6 @@
                 <button class="sort-btn" data-sort="time">🕒 最新入库</button>
             </div>
         </div>
-        <!-- 新增鱼快捷表单 (折叠/展开) -->
         <div id="inlineAddForm" style="display: none;" class="add-fish-form">
             <input type="text" id="newFishTitle" placeholder="鱼种名称 (例如 梦幻荧光鱼)" maxlength="40">
             <input type="file" id="newFishImage" accept="image/*">
@@ -311,7 +305,6 @@
         <div id="fishGridContainer" class="fish-grid">加载鱼塘中...</div>
     </div>
 
-    <!-- 详情视图 (单条鱼评分+评论) -->
     <div id="detailView" style="display: none;">
         <button class="nav-btn back-btn" id="backHomeBtn">← 返回鱼塘</button>
         <div id="detailContent"></div>
@@ -320,24 +313,32 @@
 </div>
 
 <script>
-    (async function() {
+    (function() {
         // ================== SUPABASE 凭证 =====================
         const SUPABASE_URL = "https://lciccmgqjvmzvvpytshp.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_BabKCuxCHtQMflQNefq_vw_dWxNuIz3";
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const STORAGE_BUCKET = "fish-images";
         
-        // 全局数据
-        let allFishes = [];         // 鱼列表 [{ id, title, image_url, created_at }]
-        let currentSort = "hot";    // hot, score, time
-        let searchKeyword = "";
-        let currentView = "home";
-        let currentFishId = null;    // 详情页正在查看的鱼id
-        
         // 评分文字映射 1~5
         const scoreTextMap = { 1: "拉完了", 2: "NPC", 3: "人上人", 4: "顶级", 5: "夯" };
         
-        // 辅助函数: 获取某条鱼的统计 (评论数&平均分)
+        let allFishes = [];
+        let currentSort = "hot";
+        let searchKeyword = "";
+        let currentView = "home";
+        let currentFishId = null;
+        
+        // 安全的文件名生成（移除特殊字符，只保留字母数字和点）
+        function safeFileName(originalName, fishTitle) {
+            const ext = originalName.split('.').pop().toLowerCase();
+            const timestamp = Date.now();
+            const random = Math.floor(Math.random() * 10000);
+            // 只保留字母数字，移除中文和特殊符号
+            const cleanTitle = fishTitle.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
+            return `${timestamp}_${random}_${cleanTitle}.${ext}`;
+        }
+        
         async function fetchFishStats(fishId) {
             const { data, error } = await supabase
                 .from('comments')
@@ -350,7 +351,6 @@
             return { avgScore: (sum / total), totalCount: total };
         }
         
-        // 获取所有鱼的统计数据（批量并发）
         async function enrichFishesWithStats(fishes) {
             const enriched = await Promise.all(fishes.map(async (fish) => {
                 const stats = await fetchFishStats(fish.id);
@@ -359,17 +359,14 @@
             return enriched;
         }
         
-        // 渲染首页（包含搜索/排序）
         async function renderHome() {
             if (!allFishes.length) {
-                document.getElementById('fishGridContainer').innerHTML = '<div class="loading" style="padding:2rem;">🐡 暂无鱼种，快点击“新鱼入库”上传第一只！</div>';
+                document.getElementById('fishGridContainer').innerHTML = '<div class="loading">🐡 暂无鱼种，快点击“新鱼入库”上传第一只！</div>';
                 return;
             }
-            // 先获取每一条鱼的实时统计数据（确保热度/评分最新）
             let fishesWithStats = await enrichFishesWithStats(allFishes);
-            // 搜索过滤
             let filtered = fishesWithStats.filter(f => f.title.toLowerCase().includes(searchKeyword.toLowerCase()));
-            // 排序
+            
             if (currentSort === "hot") {
                 filtered.sort((a,b) => (b.commentCount || 0) - (a.commentCount || 0));
             } else if (currentSort === "score") {
@@ -380,7 +377,7 @@
             
             const grid = document.getElementById('fishGridContainer');
             if (filtered.length === 0) {
-                grid.innerHTML = '<div style="padding:2rem; text-align:center;">🐟 没有找到相关鱼儿~</div>';
+                grid.innerHTML = '<div class="loading">🐟 没有找到相关鱼儿~</div>';
                 return;
             }
             let html = '';
@@ -389,7 +386,7 @@
                 const starShow = fish.avgScore ? '⭐ ' + avgFixed : '🐟 待评分';
                 html += `
                     <div class="fish-card" data-id="${fish.id}">
-                        <img class="fish-card-img" src="${fish.image_url}" alt="${fish.title}" onerror="this.src='https://picsum.photos/id/129/300/180'">
+                        <img class="fish-card-img" src="${fish.image_url}" alt="${escapeHtml(fish.title)}" onerror="this.src='https://picsum.photos/id/129/300/180'">
                         <div class="fish-card-info">
                             <div class="fish-card-title">🐠 ${escapeHtml(fish.title)}</div>
                             <div class="fish-card-stats">
@@ -402,7 +399,7 @@
                 `;
             }
             grid.innerHTML = html;
-            // 绑定卡片点击跳转详情
+            
             document.querySelectorAll('.fish-card').forEach(card => {
                 const id = parseInt(card.getAttribute('data-id'));
                 card.addEventListener('click', (e) => {
@@ -410,7 +407,7 @@
                     showDetailView(id);
                 });
             });
-            // 绑定删除鱼按钮事件
+            
             document.querySelectorAll('.delete-fish-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     e.stopPropagation();
@@ -431,15 +428,12 @@
             });
         }
         
-        // 删除鱼 + 其所有评论
         async function deleteFishAndComments(fishId) {
-            // 1. 删除所有相关评论
             const { error: commentError } = await supabase
                 .from('comments')
                 .delete()
                 .eq('fish_id', fishId);
             if (commentError) console.warn("删除评论失败", commentError);
-            // 2. 删除鱼记录
             const { error: fishError } = await supabase
                 .from('fishes')
                 .delete()
@@ -448,12 +442,11 @@
             else alert("🗑️ 鱼种已删除");
         }
         
-        // 详情视图渲染
         async function showDetailView(fishId) {
             currentFishId = fishId;
             const fish = allFishes.find(f => f.id === fishId);
             if (!fish) return;
-            // 加载该鱼的评论
+            
             const { data: commentsData, error } = await supabase
                 .from('comments')
                 .select('*')
@@ -461,13 +454,14 @@
                 .order('created_at', { ascending: false });
             if (error) console.error(error);
             const comments = commentsData || [];
-            // 计算当前鱼的平均分
+            
             let avgScore = 0;
             if (comments.length) {
                 const totalScore = comments.reduce((a,b) => a + b.score, 0);
                 avgScore = (totalScore / comments.length).toFixed(1);
             }
             const scoreText = avgScore ? `${avgScore} 星` : '暂无评分';
+            
             const html = `
                 <div class="fish-detail-header">
                     <img class="detail-img" src="${fish.image_url}" onerror="this.src='https://picsum.photos/id/129/300/300'">
@@ -490,7 +484,7 @@
                 </div>
             `;
             document.getElementById('detailContent').innerHTML = html;
-            // 渲染星星组件
+            
             let selectedStar = null;
             function renderStarsDetail(selected) {
                 const starContainer = document.getElementById('detailStars');
@@ -513,9 +507,9 @@
                 }
             }
             renderStarsDetail(null);
-            // 提交评论
+            
             const submitBtn = document.getElementById('submitDetailComment');
-            const newSubmit = async () => {
+            submitBtn.onclick = async () => {
                 if (selectedStar === null) { alert("请先点击星星打分 (1~5⭐)"); return; }
                 let content = document.getElementById('detailCommentText').value.trim();
                 if (!content) { alert("请留下你对这条鱼的看法~"); return; }
@@ -536,11 +530,9 @@
                 renderStarsDetail(null);
                 document.getElementById('selectedRatingText').innerHTML = '';
                 document.getElementById('scoreLevelLabel').innerHTML = '待评分';
-                // 刷新详情视图显示最新评论
                 await refreshDetailAfterComment(fishId);
             };
-            submitBtn.onclick = newSubmit;
-            // 绑定每个评论的删除按钮 (事件委托)
+            
             const commentsDiv = document.getElementById('detailCommentsList');
             if (commentsDiv) {
                 commentsDiv.querySelectorAll('.delete-comment-btn').forEach(btn => {
@@ -568,7 +560,7 @@
         }
         
         function renderCommentListHtml(comments) {
-            if (!comments.length) return '<div style="padding:1rem;text-align:center;">🐟 暂无评论，来做第一个渔友～</div>';
+            if (!comments.length) return '<div class="loading">🐟 暂无评论，来做第一个渔友～</div>';
             let html = '';
             for (let c of comments) {
                 const starShow = "★".repeat(c.score) + "☆".repeat(5 - c.score);
@@ -584,28 +576,37 @@
             return html;
         }
         
-        // 文件上传至 Supabase Storage, 返回公开URL
         async function uploadFishImage(file, fishTitle) {
             if (!file) throw new Error("未选择图片");
-            const ext = file.name.split('.').pop();
-            const fileName = `${Date.now()}_${fishTitle.replace(/\s/g, '_')}.${ext}`;
+            
+            // 限制文件大小 5MB
+            if (file.size > 5 * 1024 * 1024) {
+                throw new Error("图片不能超过 5MB");
+            }
+            
+            const fileName = safeFileName(file.name, fishTitle);
+            console.log("上传文件名:", fileName);
+            
             const { data, error } = await supabase.storage
                 .from(STORAGE_BUCKET)
-                .upload(fileName, file, { cacheControl: '3600', upsert: false });
-            if (error) throw error;
+                .upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: false,
+                    contentType: file.type
+                });
+            
+            if (error) {
+                console.error("上传错误详情:", error);
+                throw new Error(`上传失败: ${error.message}`);
+            }
+            
             const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
             return urlData.publicUrl;
         }
         
-        // 新增鱼种 (图片上传+写入 fishes)
         async function addNewFish(title, imageFile) {
             if (!title || title.trim() === "") throw new Error("鱼名不能为空");
-            let imageUrl = "";
-            if (imageFile) {
-                imageUrl = await uploadFishImage(imageFile, title);
-            } else {
-                throw new Error("请选择图片");
-            }
+            let imageUrl = await uploadFishImage(imageFile, title);
             const { error } = await supabase
                 .from('fishes')
                 .insert([{ title: title.trim(), image_url: imageUrl }]);
@@ -613,7 +614,6 @@
             return true;
         }
         
-        // 加载所有鱼 (原始数据)
         async function loadAllFishes() {
             const { data, error } = await supabase
                 .from('fishes')
@@ -623,24 +623,17 @@
             else { allFishes = data || []; }
         }
         
-        // 界面UI控制
         function showHome() {
             currentView = "home";
             document.getElementById('homeView').style.display = 'block';
             document.getElementById('detailView').style.display = 'none';
             renderHome();
         }
-        function showDetailFromHome(id) {
-            currentView = "detail";
-            document.getElementById('homeView').style.display = 'none';
-            document.getElementById('detailView').style.display = 'block';
-            showDetailView(id);
-        }
         
-        // ----- 事件绑定 -----
+        // 事件绑定
         document.getElementById('goHomeBtn').onclick = () => { showHome(); };
         document.getElementById('backHomeBtn').onclick = () => { showHome(); };
-        // 显示新增表单浮层（内联）
+        
         const addFormDiv = document.getElementById('inlineAddForm');
         document.getElementById('showAddFormBtn').onclick = () => {
             if (addFormDiv.style.display === 'none' || addFormDiv.style.display === '') {
@@ -650,16 +643,20 @@
             }
         };
         document.getElementById('cancelAddBtn').onclick = () => { addFormDiv.style.display = 'none'; };
+        
         document.getElementById('confirmAddFishBtn').onclick = async () => {
             const titleInput = document.getElementById('newFishTitle');
             const fileInput = document.getElementById('newFishImage');
             const title = titleInput.value.trim();
             const file = fileInput.files[0];
+            
             if (!title) { alert("请输入鱼名"); return; }
             if (!file) { alert("请选择一张鱼儿图片"); return; }
+            
             const uploadBtn = document.getElementById('confirmAddFishBtn');
             uploadBtn.disabled = true;
             uploadBtn.innerText = "上传中...";
+            
             try {
                 await addNewFish(title, file);
                 alert(`✅ 成功添加新鱼: ${title}`);
@@ -670,6 +667,7 @@
                 await renderHome();
                 if (currentView === 'home') renderHome();
             } catch (err) {
+                console.error("添加错误:", err);
                 alert("添加失败: " + err.message);
             } finally {
                 uploadBtn.disabled = false;
@@ -677,13 +675,12 @@
             }
         };
         
-        // 搜索监听
         const searchInput = document.getElementById('searchInput');
         searchInput.addEventListener('input', (e) => {
             searchKeyword = e.target.value;
             renderHome();
         });
-        // 排序监听
+        
         const sortBtns = document.querySelectorAll('.sort-btn');
         sortBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -694,13 +691,13 @@
                 renderHome();
             });
         });
-        // 启动初始化
-        await loadAllFishes();
-        // 默认激活热度排序按钮样式
-        document.querySelector('.sort-btn[data-sort="hot"]').classList.add('active');
-        showHome();
         
-        // 辅助函数
+        async function init() {
+            await loadAllFishes();
+            document.querySelector('.sort-btn[data-sort="hot"]').classList.add('active');
+            showHome();
+        }
+        
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>]/g, function(m) {
@@ -710,6 +707,8 @@
                 return m;
             });
         }
+        
+        init();
     })();
 </script>
 </body>
