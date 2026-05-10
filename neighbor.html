@@ -289,11 +289,63 @@
             font-size: 0.7rem;
             margin-left: 2px;
         }
+        
+        /* 分页控件样式 */
+        .pagination-control {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0 15px 0;
+        }
+        .page-size-select {
+            background: #e7f2f7;
+            border: none;
+            padding: 0.3rem 0.6rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        
         .comments-refresh-btn {
             background: #5f9ea0;
             padding: 0.3rem 0.9rem;
             font-size: 0.75rem;
             border-radius: 2rem;
+        }
+        
+        /* 上下切换鱼种导航栏 */
+        .fish-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1.5rem 0 0.5rem;
+            padding-top: 1rem;
+            border-top: 1px dashed #b8d8ec;
+        }
+        .nav-fish-btn {
+            background: #2b9fc2;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-fish-btn:hover {
+            background: #f59e0b;
+            transform: translateY(-2px);
+        }
+        .current-fish-name {
+            font-size: 0.9rem;
+            background: #eef5f9;
+            padding: 0.3rem 1rem;
+            border-radius: 2rem;
+            color: #016b8c;
         }
         
         .comment-item {
@@ -349,6 +401,7 @@
             .app-container { padding: 1rem; } 
             .toolbar { flex-direction: column; }
             .detail-img { width: 100%; max-width: 280px; }
+            .fish-navigation { flex-direction: column; gap: 10px; }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -480,9 +533,11 @@
         let currentView = "home";
         let currentFishId = null;
         
-        // 评论区排序状态
+        // 评论区排序分页状态
         let commentSortType = "time";   // 'time' 或 'likes'
         let commentSortOrder = "desc";   // 'desc' 或 'asc'
+        let pageSize = 5;               // 每页显示条数，默认5
+        let currentPage = 1;            // 当前页码
         
         function escapeHtml(str) {
             if (!str) return '';
@@ -501,7 +556,6 @@
             return `fish_${timestamp}_${randomHash}.${ext}`;
         }
         
-        // 获取某条评论的点赞数
         async function fetchCommentLikeCount(commentId) {
             const { data, error } = await supabase
                 .from('comment_likes')
@@ -511,7 +565,6 @@
             return data.length;
         }
         
-        // 批量获取评论的点赞数
         async function fetchCommentsWithLikes(commentsList) {
             const enriched = await Promise.all(commentsList.map(async (comment) => {
                 const likeCount = await fetchCommentLikeCount(comment.id);
@@ -531,7 +584,6 @@
             return data.length > 0;
         }
         
-        // 切换点赞状态
         async function toggleLike(commentId, currentLikeCount, isCurrentlyLiked) {
             if (isCurrentlyLiked) {
                 const { error } = await supabase
@@ -569,6 +621,14 @@
                 return { ...fish, avgScore: stats.avgScore, commentCount: stats.totalCount };
             }));
             return enriched;
+        }
+        
+        // 获取当前排序后的鱼列表（用于上下切换）
+        async function getCurrentFishList() {
+            let fishesWithStats = await enrichFishesWithStats(allFishes);
+            let filtered = fishesWithStats.filter(f => f.title.toLowerCase().includes(searchKeyword.toLowerCase()));
+            filtered = applySorting(filtered, currentSort, sortOrder[currentSort]);
+            return filtered;
         }
         
         window.goToDetail = function(fishId) {
@@ -669,7 +729,20 @@
             }
         }
         
-        // 对评论列表进行排序
+        async function switchToFish(delta) {
+            const fishList = await getCurrentFishList();
+            if (fishList.length === 0) return;
+            const currentIndex = fishList.findIndex(f => f.id === currentFishId);
+            let newIndex = currentIndex + delta;
+            if (newIndex < 0) newIndex = fishList.length - 1;
+            if (newIndex >= fishList.length) newIndex = 0;
+            const newFish = fishList[newIndex];
+            if (newFish && newFish.id !== currentFishId) {
+                currentFishId = newFish.id;
+                await showDetailView(currentFishId);
+            }
+        }
+        
         function sortComments(commentsList, sortType, sortOrder) {
             const sorted = [...commentsList];
             if (sortType === "time") {
@@ -703,10 +776,15 @@
             if (error) console.error(error);
             const rawCommentsList = comments || [];
             
-            // 获取每条评论的点赞数和是否已点赞
             let commentsWithLikes = await fetchCommentsWithLikes(rawCommentsList);
-            // 应用排序
             commentsWithLikes = sortComments(commentsWithLikes, commentSortType, commentSortOrder);
+            
+            const totalComments = commentsWithLikes.length;
+            const totalPages = Math.ceil(totalComments / pageSize);
+            if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+            const startIdx = (currentPage - 1) * pageSize;
+            const pagedComments = commentsWithLikes.slice(startIdx, startIdx + pageSize);
             
             let avgScore = 0;
             if (rawCommentsList.length) {
@@ -714,9 +792,8 @@
                 avgScore = Math.round((totalScore / rawCommentsList.length) * 10) / 10;
             }
             
-            // 生成评论HTML
             let commentsHtml = '';
-            for (let c of commentsWithLikes) {
+            for (let c of pagedComments) {
                 const starShow = "★".repeat(c.score) + "☆".repeat(5 - c.score);
                 const time = new Date(c.created_at).toLocaleString();
                 const isOwner = c.device_uuid === deviceUUID;
@@ -739,7 +816,6 @@
             }
             if (commentsWithLikes.length === 0) commentsHtml = '<div class="loading">🐟 暂无评论，来做第一个鱼友～</div>';
             
-            // 排序按钮的active状态和方向指示
             const timeSortActive = commentSortType === "time";
             const likesSortActive = commentSortType === "likes";
             const timeDirectionIcon = commentSortOrder === 'desc' ? '▼' : '▲';
@@ -779,7 +855,7 @@
                 
                 <div class="comments-header">
                     <div class="comments-header-left">
-                        <h4>📋 最新鱼友评价</h4>
+                        <h4>📋 鱼友评价</h4>
                         <button id="commentSortTimeBtn" class="comment-sort-btn ${timeSortActive ? 'active' : ''}" data-sort-type="time">
                             ⏰ 时间排序 <span class="comment-sort-direction">${timeSortActive ? timeDirectionIcon : '▼'}</span>
                         </button>
@@ -789,7 +865,25 @@
                     </div>
                     <button id="commentsRefreshBtn" class="nav-btn comments-refresh-btn">🔄 刷新评论</button>
                 </div>
+                
+                <div class="pagination-control">
+                    <span style="font-size:0.75rem;">显示</span>
+                    <select id="pageSizeSelect" class="page-size-select">
+                        <option value="5" ${pageSize === 5 ? 'selected' : ''}>5条</option>
+                        <option value="10" ${pageSize === 10 ? 'selected' : ''}>10条</option>
+                        <option value="20" ${pageSize === 20 ? 'selected' : ''}>20条</option>
+                        <option value="50" ${pageSize === 50 ? 'selected' : ''}>50条</option>
+                    </select>
+                    <span style="font-size:0.75rem;">/ 共 ${totalComments} 条</span>
+                </div>
+                
                 <div id="detailCommentsList">${commentsHtml}</div>
+                
+                <div class="fish-navigation">
+                    <button id="prevFishBtn" class="nav-fish-btn">🐟 上一条鱼</button>
+                    <span class="current-fish-name">当前：${escapeHtml(fish.title)}</span>
+                    <button id="nextFishBtn" class="nav-fish-btn">下一条鱼 🐟</button>
+                </div>
             `;
             document.getElementById('detailContent').innerHTML = html;
             
@@ -923,7 +1017,17 @@
                 };
             });
             
-            // 评论区排序按钮事件
+            // 分页下拉框事件
+            const pageSizeSelect = document.getElementById('pageSizeSelect');
+            if (pageSizeSelect) {
+                pageSizeSelect.onchange = (e) => {
+                    pageSize = parseInt(e.target.value);
+                    currentPage = 1;
+                    showDetailView(fishId);
+                };
+            }
+            
+            // 排序按钮事件
             const sortTimeBtn = document.getElementById('commentSortTimeBtn');
             const sortLikesBtn = document.getElementById('commentSortLikesBtn');
             
@@ -935,6 +1039,7 @@
                         commentSortType = "time";
                         commentSortOrder = "desc";
                     }
+                    currentPage = 1;
                     showDetailView(fishId);
                 };
             }
@@ -947,9 +1052,16 @@
                         commentSortType = "likes";
                         commentSortOrder = "desc";
                     }
+                    currentPage = 1;
                     showDetailView(fishId);
                 };
             }
+            
+            // 上下切换鱼种按钮
+            const prevBtn = document.getElementById('prevFishBtn');
+            const nextBtn = document.getElementById('nextFishBtn');
+            if (prevBtn) prevBtn.onclick = () => switchToFish(-1);
+            if (nextBtn) nextBtn.onclick = () => switchToFish(1);
             
             const commentsRefreshBtn = document.getElementById('commentsRefreshBtn');
             if (commentsRefreshBtn) {
