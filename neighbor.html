@@ -369,7 +369,7 @@
         </div>
         <div id="detailContent"></div>
     </div>
-    <footer>🐠 评价实时同步 · 可匿名发布 · 点赞互动 💖</footer>
+    <footer>🐠 评价实时同步 · 可匿名发布 · 点赞互动 💖 · 社区文明公约：请勿发表不雅言论</footer>
 </div>
 
 <script>
@@ -381,6 +381,47 @@
         const STORAGE_BUCKET = "fish-images";
         
         const scoreTextMap = { 1: "拉完了", 2: "NPC", 3: "人上人", 4: "顶级", 5: "夯" };
+        
+        // ================== 敏感词过滤库 ==================
+        // 常见不雅词汇（可根据需要增删）
+        const SENSITIVE_WORDS = [
+            "傻逼", "蠢猪", "白痴", 
+            "去死", "操你", "妈的", "尼玛", "tm的", "TMD", "贱人", "婊子",
+            "操蛋", "日你", "草泥马",
+            "你妈", "他妈的", "特么的", "卧槽", "我操", "媽的", "幹你", 
+            "fuck", "shit", "damn", "bitch", "asshole", "stupid", "idiot",
+            "傻逼", "sb", "sjb", "傻比", "傻批", "脑残", "没脑子", "脑子有病", "脑子进水",
+            "二百五", "十三点", "神经病", "精神病", "贱人", "贱货", "婊子", "荡妇", "骚货",
+            "尼玛", "你妈的", "md", "tm", "你妈逼", "尼玛币", "他妈", "他妈的", "祖宗十八代",
+            "全家死光", "全家遭殃", "爹妈死绝", "没爹没妈", "有人生没人养", "你爸死了", "你妈死了",
+            "卧槽", "wc", "cao", "我草", "草泥马", "草尼玛", "操", "肏", "艹", "去死", "该死",
+            "鸡巴", "鸡吧", "屌",  "屌丝", "逼样",
+            "龟儿子", "龟孙", "狗东西", "狗杂种",
+            "傻x", "s b", "sb", "2b", "煞笔", "撕逼", "约炮", "嫖娼"
+        ];
+        
+        // 将敏感词转为正则（不区分大小写）
+        function buildSensitiveRegex() {
+            // 转义正则特殊字符
+            const escapedWords = SENSITIVE_WORDS.map(word => 
+                word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            );
+            return new RegExp(escapedWords.join('|'), 'gi');
+        }
+        
+        const sensitiveRegex = buildSensitiveRegex();
+        
+        // 检测文本是否包含敏感词
+        function containsSensitiveWords(text) {
+            if (!text) return false;
+            return sensitiveRegex.test(text);
+        }
+        
+        // 替换敏感词为星号（可选功能，用于显示友好的提示）
+        function censorSensitiveWords(text) {
+            if (!text) return text;
+            return text.replace(sensitiveRegex, (match) => '*'.repeat(match.length));
+        }
         
         // ================== 设备唯一标识管理 ==================
         const STORAGE_DEVICE_ID_KEY = "fish_forum_device_id";
@@ -457,7 +498,6 @@
         // 切换点赞状态
         async function toggleLike(commentId, currentLikeCount, isCurrentlyLiked) {
             if (isCurrentlyLiked) {
-                // 取消点赞
                 const { error } = await supabase
                     .from('comment_likes')
                     .delete()
@@ -466,7 +506,6 @@
                 if (error) throw error;
                 return { likeCount: currentLikeCount - 1, liked: false };
             } else {
-                // 添加点赞
                 const { error } = await supabase
                     .from('comment_likes')
                     .insert({ comment_id: commentId, user_uuid: deviceUUID });
@@ -623,7 +662,6 @@
                 const time = new Date(c.created_at).toLocaleString();
                 const isOwner = c.device_uuid === deviceUUID;
                 
-                // 获取该评论的点赞状态
                 const likeInfo = await fetchCommentLikes(c.id);
                 const isLiked = likeInfo.userLiked;
                 const likeCount = likeInfo.likeCount;
@@ -714,7 +752,7 @@
                 }
             });
             
-            // 提交评论
+            // 提交评论（带敏感词检测）
             document.getElementById('submitDetailComment').onclick = async () => {
                 if (selectedStar === null) { 
                     alert("🐟 请先点击星星为该鱼打分！"); 
@@ -724,6 +762,12 @@
                 if (!content) { 
                     alert("📝 请填写对该鱼的评价或心得~"); 
                     return; 
+                }
+                
+                // ========== 敏感词检测 ==========
+                if (containsSensitiveWords(content)) {
+                    alert("⚠️ 评论包含不雅言论，请修改后再发表。\n请遵守社区文明公约，共同维护良好氛围。");
+                    return;
                 }
                 
                 const isAnonymous = document.getElementById('anonymousCheckbox').checked;
@@ -768,7 +812,6 @@
                     
                     try {
                         const result = await toggleLike(commentId, currentCount, isCurrentlyLiked);
-                        // 更新UI
                         btn.setAttribute('data-like-count', result.likeCount);
                         const likeSpan = btn.querySelector('.like-count');
                         if (likeSpan) likeSpan.innerText = result.likeCount;
@@ -802,7 +845,6 @@
                             alert("❌ 无权删除他人的评论！");
                             return;
                         }
-                        // 同时删除该评论的所有点赞记录
                         await supabase.from('comment_likes').delete().eq('comment_id', commentId);
                         await supabase.from('comments').delete().eq('id', commentId);
                         await showDetailView(fishId);
